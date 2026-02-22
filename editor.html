@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <link rel="icon" type="image/png" sizes="96x96" href="editor.png?v=2">
+    <link rel="shortcut icon" type="image/png" href="editor.png?v=2">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>C2 Sub Editor</title>
+<style>
+:root{
+  --bg:#141420;--surface:#1c1c2e;--surface2:#252540;--surface3:#2e2e4a;
+  --accent:#00d4aa;--accent2:#00b894;--accent-dim:rgba(0,212,170,.12);
+  --text:#e0e0ec;--text2:#c0c0d4;--muted:#707090;--border:#2e2e48;
+  --danger:#ff6b6b;--success:#00d4aa;--warn:#ffc107;
+  --blue:#5b9bf5;--purple:#a78bfa;--orange:#f59e42;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;display:flex;flex-direction:column}
+::selection{background:var(--accent);color:#111}
+
+/* ── Header ── */
+#header{
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:0 14px;height:50px;display:flex;align-items:center;gap:8px;
+  flex-shrink:0;z-index:10;
+}
+#btnBack{padding:6px 12px;border-radius:7px;border:none;background:var(--surface2);
+  color:var(--text2);font-size:.82rem;font-weight:600;cursor:pointer;
+  display:flex;align-items:center;gap:5px;transition:all .15s}
+#btnBack:hover{background:var(--surface3);color:#fff}
+#titleInput{flex:1;min-width:80px;max-width:340px;padding:5px 10px;
+  border-radius:7px;border:1px solid var(--border);background:var(--surface2);
+  color:var(--text);font-size:.88rem;outline:none;transition:border-color .15s}
+#titleInput:focus{border-color:var(--accent)}
+.hdr-sep{width:1px;height:24px;background:var(--border);flex-shrink:0;margin:0 4px}
+.hdr-btn{padding:6px 11px;border-radius:7px;border:none;background:var(--surface2);
+  color:var(--text2);font-size:.8rem;font-weight:600;cursor:pointer;
+  white-space:nowrap;display:flex;align-items:center;gap:4px;transition:all .15s}
+.hdr-btn:hover{background:var(--surface3);color:#fff}
+.hdr-btn:disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
+.hdr-btn.accent{background:var(--accent);color:#111}
+.hdr-btn.accent:hover{background:var(--accent2)}
+.hdr-btn.danger{color:var(--danger)}
+.hdr-btn.danger:hover{background:rgba(255,107,107,.12)}
+#cueCount{font-size:.75rem;color:var(--muted);white-space:nowrap}
+
+/* ── Toolbar ── */
+#toolbar{
+  background:var(--surface2);border-bottom:1px solid var(--border);
+  padding:6px 14px;display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap;
+}
+.tb-btn{padding:5px 10px;border-radius:6px;border:1px solid var(--border);
+  background:var(--surface3);color:var(--text2);font-size:.78rem;font-weight:600;
+  cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;transition:all .15s}
+.tb-btn:hover{border-color:var(--accent);color:var(--accent)}
+.tb-btn:disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
+.tb-sep{width:1px;height:20px;background:var(--border);flex-shrink:0;margin:0 2px}
+.tb-label{font-size:.75rem;color:var(--muted);white-space:nowrap}
+#transLang{padding:4px 8px;border-radius:6px;border:1px solid var(--border);
+  background:var(--surface3);color:var(--text);font-size:.78rem;outline:none}
+#transLang:focus{border-color:var(--accent)}
+#transStatus{font-size:.73rem;color:var(--muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ── Table area ── */
+#tableWrap{flex:1;overflow:auto;min-height:0}
+table#subTable{width:100%;border-collapse:collapse;table-layout:fixed}
+col.c-num{width:42px}
+col.c-time{width:106px}
+col.c-text{width:auto}
+col.c-trans{width:auto}
+col.c-act{width:78px}
+thead tr{background:var(--surface);position:sticky;top:0;z-index:5}
+thead th{padding:7px 8px;font-size:.7rem;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid var(--border);
+  text-align:left;user-select:none}
+th.th-num{text-align:center}
+th.th-act{text-align:center}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+tbody tr:hover{background:rgba(255,255,255,.025)}
+tbody tr.selected{background:var(--accent-dim)}
+td{padding:0;vertical-align:top}
+td.td-num{
+  text-align:center;color:var(--muted);font-size:.72rem;padding:10px 4px;
+  vertical-align:middle;font-variant-numeric:tabular-nums;user-select:none;
+  border-right:1px solid var(--border)
+}
+td.td-time{border-right:1px solid var(--border)}
+.time-in{
+  width:100%;padding:8px 6px;border:none;background:transparent;
+  color:var(--text2);font-family:'Cascadia Code','Fira Code','Courier New',monospace;
+  font-size:.78rem;outline:none;transition:background .12s;
+  font-variant-numeric:tabular-nums
+}
+.time-in:focus{background:rgba(0,0,0,.2);color:var(--accent)}
+.time-in.invalid{color:var(--danger)!important}
+td.td-text{border-right:1px solid var(--border)}
+td.td-trans{}
+.text-in{
+  width:100%;min-height:36px;resize:none;
+  padding:8px 8px;border:none;background:transparent;
+  color:var(--text);font-size:.85rem;outline:none;
+  line-height:1.5;overflow:hidden;
+  transition:background .12s
+}
+.text-in:focus{background:rgba(0,0,0,.18)}
+.trans-in{color:var(--text2);font-style:italic;font-size:.82rem}
+.trans-in:focus{font-style:normal}
+td.td-act{text-align:center;padding:6px 4px;vertical-align:middle;white-space:nowrap}
+.act-btn{
+  width:22px;height:22px;border-radius:5px;border:1px solid var(--border);
+  background:var(--surface3);color:var(--muted);font-size:.8rem;
+  cursor:pointer;padding:0;line-height:1;transition:all .12s;display:inline-flex;
+  align-items:center;justify-content:center
+}
+.act-btn:hover{border-color:var(--accent);color:var(--accent)}
+.act-btn.del:hover{border-color:var(--danger);color:var(--danger)}
+.act-btn.split:hover{border-color:var(--blue);color:var(--blue)}
+#emptyMsg{text-align:center;padding:60px 20px;color:var(--muted);font-size:.9rem;display:none}
+#emptyMsg p{margin-bottom:12px}
+#emptyMsg button{padding:9px 20px;border-radius:8px;border:none;background:var(--accent);
+  color:#111;font-weight:700;font-size:.88rem;cursor:pointer}
+#emptyMsg button:hover{background:var(--accent2)}
+
+/* ── Status bar ── */
+#statusBar{
+  background:var(--surface);border-top:1px solid var(--border);
+  padding:4px 14px;font-size:.71rem;color:var(--muted);flex-shrink:0;
+  display:flex;align-items:center;gap:12px
+}
+#statusBar kbd{background:var(--surface2);border:1px solid var(--border);
+  border-radius:3px;padding:0 4px;font-size:.68rem;color:var(--text2)}
+
+/* ── Drag-over overlay ── */
+#dropOverlay{
+  display:none;position:fixed;inset:0;background:rgba(0,212,170,.15);
+  border:3px dashed var(--accent);z-index:100;pointer-events:none;
+  align-items:center;justify-content:center;font-size:1.4rem;color:var(--accent);font-weight:800
+}
+#dropOverlay.show{display:flex}
+
+/* ── Export dropdown ── */
+.dropdown{position:relative;display:inline-flex}
+.dropdown-menu{
+  display:none;position:absolute;top:calc(100% + 4px);right:0;
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  min-width:160px;box-shadow:0 6px 24px rgba(0,0,0,.4);z-index:50;overflow:hidden
+}
+.dropdown-menu.open{display:block}
+.dd-item{display:block;width:100%;padding:9px 16px;text-align:left;background:none;
+  border:none;color:var(--text2);font-size:.83rem;cursor:pointer;transition:all .12s;
+  font-weight:600}
+.dd-item:hover{background:var(--surface2);color:var(--accent)}
+.dd-sep{height:1px;background:var(--border);margin:2px 0}
+
+/* ── Import overlay ── */
+#importInput{display:none}
+
+/* ── Translate progress ── */
+.trans-prog{
+  display:none;position:fixed;bottom:40px;right:20px;
+  background:var(--surface);border:1px solid var(--accent);border-radius:10px;
+  padding:12px 18px;font-size:.83rem;color:var(--text);min-width:200px;
+  box-shadow:0 4px 20px rgba(0,0,0,.4);z-index:80
+}
+.trans-prog.show{display:block}
+.trans-prog-bar{height:4px;background:var(--surface3);border-radius:2px;margin-top:8px;overflow:hidden}
+.trans-prog-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s;width:0%}
+</style>
+</head>
+<body>
+
+<!-- ══ Drop overlay ══ -->
+<div id="dropOverlay">📂 วางไฟล์ subtitle ที่นี่</div>
+
+<!-- ══ Header ══ -->
+<div id="header">
+  <button id="btnBack" onclick="goBack()">← C2Sub</button>
+  <span style="font-size:1rem;font-weight:800;color:var(--accent);white-space:nowrap">✏️ Editor</span>
+  <input type="text" id="titleInput" placeholder="ชื่อ subtitle…" onchange="title=this.value;updateStatus()">
+  <div class="hdr-sep"></div>
+
+  <!-- Undo / Redo -->
+  <button class="hdr-btn" id="btnUndo" onclick="undo()" title="Ctrl+Z" disabled>↩ Undo</button>
+  <button class="hdr-btn" id="btnRedo" onclick="redo()" title="Ctrl+Y" disabled>↪ Redo</button>
+  <div class="hdr-sep"></div>
+
+  <!-- Add cue button -->
+  <button class="hdr-btn accent" onclick="addCueAtEnd()" title="Ctrl+Shift+Enter">+ บรรทัด</button>
+
+  <!-- Export dropdown -->
+  <div class="dropdown" id="exportDrop">
+    <button class="hdr-btn accent" onclick="toggleDrop('exportDrop')">⬇ Export ▾</button>
+    <div class="dropdown-menu" id="exportDropMenu">
+      <button class="dd-item" onclick="exportAs('srt'); closeDrop()">SRT (.srt)</button>
+      <button class="dd-item" onclick="exportAs('vtt'); closeDrop()">WebVTT (.vtt)</button>
+      <button class="dd-item" onclick="exportAs('sbv'); closeDrop()">SBV (.sbv)</button>
+      <button class="dd-item" onclick="exportAs('ass'); closeDrop()">ASS/SSA (.ass)</button>
+      <button class="dd-item" onclick="exportAs('txt'); closeDrop()">TXT (text only)</button>
+      <div class="dd-sep"></div>
+      <button class="dd-item" onclick="exportAs('bilingual'); closeDrop()">Bilingual SRT</button>
+    </div>
+  </div>
+
+  <!-- Import -->
+  <button class="hdr-btn" onclick="document.getElementById('importInput').click()">📂 Import</button>
+  <input type="file" id="importInput" accept=".srt,.vtt,.sbv,.sub,.ass,.ssa,.txt" onchange="onImportFile(this)">
+
+  <div class="hdr-sep"></div>
+  <span id="cueCount">0 บรรทัด</span>
+</div>
+
+<!-- ══ Toolbar ══ -->
+<div id="toolbar">
+  <span class="tb-label">🌐 แปลเป็น:</span>
+  <select id="transLang"></select>
+  <button class="tb-btn" id="btnTranslate" onclick="doTranslateAll()">แปลทั้งหมด</button>
+  <button class="tb-btn" id="btnTranslateSel" onclick="doTranslateSelected()">แปลที่เลือก</button>
+  <button class="tb-btn" onclick="clearAllTranslations()" title="ลบคำแปลทั้งหมด">× ล้างคำแปล</button>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" onclick="shiftTimesDialog()">⏱ Shift เวลา</button>
+  <button class="tb-btn" onclick="removeFormatting()">🗑 ล้าง Tags</button>
+  <div class="tb-sep"></div>
+  <span id="transStatus"></span>
+</div>
+
+<!-- ══ Table ══ -->
+<div id="tableWrap">
+  <div id="emptyMsg">
+    <p>ยังไม่มี subtitle — นำเข้าไฟล์หรือสร้างบรรทัดใหม่</p>
+    <button onclick="addCueAtEnd()">+ เพิ่มบรรทัดแรก</button>
+  </div>
+  <table id="subTable">
+    <colgroup>
+      <col class="c-num"><col class="c-time"><col class="c-time">
+      <col class="c-text"><col class="c-trans"><col class="c-act">
+    </colgroup>
+    <thead>
+      <tr>
+        <th class="th-num">#</th>
+        <th>START</th><th>END</th>
+        <th>SUBTITLE</th><th>TRANSLATION</th>
+        <th class="th-act">ACT</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<!-- ══ Translate progress ══ -->
+<div class="trans-prog" id="transProgBox">
+  <span id="transProgMsg">กำลังแปล…</span>
+  <div class="trans-prog-bar"><div class="trans-prog-fill" id="transProgFill"></div></div>
+</div>
+
+<!-- ══ Status bar ══ -->
+<div id="statusBar">
+  <span id="statusLeft">พร้อมใช้งาน</span>
+  <span style="flex:1"></span>
+  <span><kbd>Tab</kbd> ถัดไป &nbsp;<kbd>Ctrl+Z</kbd> เลิกทำ &nbsp;<kbd>Ctrl+Y</kbd> ทำซ้ำ &nbsp;<kbd>Ctrl+Enter</kbd> เพิ่มบรรทัด &nbsp;<kbd>Ctrl+D</kbd> ลบบรรทัด &nbsp;<kbd>Ctrl+Shift+S</kbd> แยกบรรทัด</span>
+</div>
+
+<script>
+// ════════════════════════════════════════════
+// Constants
+// ════════════════════════════════════════════
+// ตั้งค่า Worker URL สำหรับเว็บโหสติ้ง
+// สำเนาค่าเดียวกันกับ index.html
+const WORKER_URL = (function(){
+  // อ่านจาก index.html ถ้าเปิดผ่านมัน
+  try { return window.opener && window.opener.WORKER_URL ? window.opener.WORKER_URL : ''; } catch(e){ return ''; }
+})();
+const EDITSUB_KEY = 'editsub.';
+
+// ภาษาทั้งหมดจาก editsub.com (ยอดนิยมก่อน แล้วเรียงตามตัวอักษร)
+const LANGS = [
+  // ── ยอดนิยม ──
+  ['th','Thai'],['en','English'],['zh-CN','Chinese (Simplified)'],['zh-TW','Chinese (Traditional)'],
+  ['ja','Japanese'],['ko','Korean'],['vi','Vietnamese'],['id','Indonesian'],
+  ['ms','Malay'],['ar','Arabic'],['pt','Portuguese (Brazil)'],['pt-PT','Portuguese (Portugal)'],
+  ['es','Spanish'],['fr','French'],['fr-CA','French (Canada)'],['de','German'],
+  ['ru','Russian'],['hi','Hindi'],['it','Italian'],['nl','Dutch'],
+  ['pl','Polish'],['tr','Turkish'],['sv','Swedish'],['da','Danish'],
+  ['no','Norwegian'],['fi','Finnish'],['el','Greek'],['cs','Czech'],
+  ['ro','Romanian'],['hu','Hungarian'],['uk','Ukrainian'],['bg','Bulgarian'],
+  ['hr','Croatian'],['sk','Slovak'],['tl','Filipino'],['my','Myanmar (Burmese)'],
+  ['km','Khmer'],['lo','Lao'],
+  // ── ขยาย (เรียงตัวอักษร) ──
+  ['aa','Afar'],['ab','Abkhaz'],['ace','Acehnese'],['ach','Acholi'],['af','Afrikaans'],
+  ['ak','Twi'],['alz','Alur'],['am','Amharic'],['as','Assamese'],['av','Avar'],
+  ['awa','Awadhi'],['ay','Aymara'],['az','Azerbaijani'],['ba','Bashkir'],
+  ['bal','Baluchi'],['ban','Balinese'],['bbc','Batak Toba'],['bci','Baoulé'],
+  ['be','Belarusian'],['bem','Bemba'],['ber','Tamazight (Tifinagh)'],['ber-Latn','Tamazight'],
+  ['bew','Betawi'],['bho','Bhojpuri'],['bik','Bikol'],['bm','Bambara'],
+  ['bm-Nkoo','NKo'],['bn','Bengali'],['bo','Tibetan'],['br','Breton'],
+  ['bs','Bosnian'],['btx','Batak Karo'],['bts','Batak Simalungun'],['bua','Buryat'],
+  ['ca','Catalan'],['ce','Chechen'],['ceb','Cebuano'],['cgg','Kiga'],
+  ['ch','Chamorro'],['chk','Chuukese'],['chm','Meadow Mari'],['ckb','Kurdish (Sorani)'],
+  ['cnh','Hakha Chin'],['co','Corsican'],['crh','Crimean Tatar (Cyrillic)'],
+  ['crh-Latn','Crimean Tatar (Latin)'],['crs','Seychellois Creole'],
+  ['cv','Chuvash'],['cy','Welsh'],['din','Dinka'],['doi','Dogri'],
+  ['dov','Dombe'],['dv','Dhivehi'],['dyu','Dyula'],['dz','Dzongkha'],
+  ['ee','Ewe'],['eo','Esperanto'],['et','Estonian'],['eu','Basque'],
+  ['fa','Persian'],['fa-AF','Dari'],['ff','Fulani'],['fj','Fijian'],
+  ['fo','Faroese'],['fon','Fon'],['fur','Friulian'],['fy','Frisian'],
+  ['ga','Irish'],['gaa','Ga'],['gd','Scots Gaelic'],['gl','Galician'],
+  ['gn','Guarani'],['gom','Konkani'],['gu','Gujarati'],['gv','Manx'],
+  ['ha','Hausa'],['haw','Hawaiian'],['hil','Hiligaynon'],['hmn','Hmong'],
+  ['hrx','Hunsrik'],['ht','Haitian Creole'],['hy','Armenian'],
+  ['iba','Iban'],['ig','Igbo'],['ilo','Ilocano'],['is','Icelandic'],
+  ['iu','Inuktut (Syllabics)'],['iu-Latn','Inuktut (Latin)'],['iw','Hebrew'],
+  ['jam','Jamaican Patois'],['jw','Javanese'],['ka','Georgian'],['kac','Jingpo'],
+  ['kek',"Qʼeqchiʼ"],['kg','Kikongo'],['kha','Khasi'],['kk','Kazakh'],
+  ['kl','Kalaallisut'],['kn','Kannada'],['kr','Kanuri'],['kri','Krio'],
+  ['ktu','Kituba'],['ku','Kurdish (Kurmanji)'],['kv','Komi'],['ky','Kyrgyz'],
+  ['la','Latin'],['lb','Luxembourgish'],['lg','Luganda'],['li','Limburgish'],
+  ['lij','Ligurian'],['lmo','Lombard'],['ln','Lingala'],['ltg','Latgalian'],
+  ['lua','Tshiluba'],['luo','Luo'],['lus','Mizo'],['lv','Latvian'],
+  ['mad','Madurese'],['mai','Maithili'],['mak','Makassar'],['mam','Mam'],
+  ['mfe','Mauritian Creole'],['mg','Malagasy'],['mh','Marshallese'],['mi','Maori'],
+  ['min','Minang'],['mk','Macedonian'],['ml','Malayalam'],['mn','Mongolian'],
+  ['mni-Mtei','Meiteilon (Manipuri)'],['mr','Marathi'],['ms-Arab','Malay (Jawi)'],
+  ['mt','Maltese'],['mwr','Marwadi'],['ndc-ZW','Ndau'],['ne','Nepali'],
+  ['new','Nepalbhasa (Newari)'],['nhe','Nahuatl (Eastern Huasteca)'],
+  ['nr','Ndebele (South)'],['nso','Sepedi'],['nus','Nuer'],['ny','Chichewa'],
+  ['oc','Occitan'],['om','Oromo'],['or','Odia (Oriya)'],['os','Ossetian'],
+  ['pa','Punjabi (Gurmukhi)'],['pa-Arab','Punjabi (Shahmukhi)'],
+  ['pag','Pangasinan'],['pam','Kapampangan'],['pap','Papiamento'],
+  ['ps','Pashto'],['qu','Quechua'],['rn','Rundi'],['rom','Romani'],
+  ['rw','Kinyarwanda'],['sa','Sanskrit'],['sah','Yakut'],
+  ['sat','Santali (Ol Chiki)'],['sat-Latn','Santali (Latin)'],
+  ['scn','Sicilian'],['sd','Sindhi'],['se','Sami (North)'],['sg','Sango'],
+  ['shn','Shan'],['si','Sinhala'],['sl','Slovenian'],['sm','Samoan'],
+  ['sn','Shona'],['so','Somali'],['sq','Albanian'],['sr','Serbian'],
+  ['ss','Swati'],['st','Sesotho'],['su','Sundanese'],['sus','Susu'],
+  ['sw','Swahili'],['szl','Silesian'],['ta','Tamil'],['tcy','Tulu'],
+  ['te','Telugu'],['tet','Tetum'],['tg','Tajik'],['ti','Tigrinya'],
+  ['tiv','Tiv'],['tk','Turkmen'],['tn','Tswana'],['to','Tongan'],
+  ['tpi','Tok Pisin'],['trp','Kokborok'],['ts','Tsonga'],['tt','Tatar'],
+  ['tum','Tumbuka'],['ty','Tahitian'],['tyv','Tuvan'],['udm','Udmurt'],
+  ['ug','Uyghur'],['ur','Urdu'],['uz','Uzbek'],['ve','Venda'],
+  ['vec','Venetian'],['war','Waray'],['wo','Wolof'],['xh','Xhosa'],
+  ['yi','Yiddish'],['yo','Yoruba'],['yua','Yucatec Maya'],['yue','Cantonese'],
+  ['zap','Zapotec'],['zu','Zulu'],
+];
+
+// ════════════════════════════════════════════
+// State
+// ════════════════════════════════════════════
+let cues = [];      // [{start,end,text,translation}]
+let title = 'Untitled';
+let histStack = [];
+let histIdx = -1;
+let _sessionId = null;
+let _translating = false;
+
+// ════════════════════════════════════════════
+// Init
+// ════════════════════════════════════════════
+(function init(){
+  // Populate language selector
+  const sel = document.getElementById('transLang');
+  LANGS.forEach(([c,n]) => sel.appendChild(new Option(n, c)));
+  sel.value = 'th';
+
+  // Load from localStorage if id param present (cross-tab, works file:// too)
+  const params = new URLSearchParams(location.search);
+  const id = params.get('id');
+  if(id){
+    _sessionId = id;
+    try {
+      const stored = localStorage.getItem('c2sub_edit_' + id);
+      if(stored){
+        const parsed = JSON.parse(stored);
+        title = parsed.title || 'Untitled';
+        cues = (parsed.cues || []).map(normalizeCue);
+        // Clean up after reading — no longer needed
+        localStorage.removeItem('c2sub_edit_' + id);
+      }
+    } catch(e){ console.warn('Failed to load from localStorage', e); }
+  }
+
+  document.getElementById('titleInput').value = title;
+  document.title = title + ' — C2 Sub Editor';
+
+  pushHistory();
+  renderTable();
+  setupDragDrop();
+
+  // Close dropdown on outside click
+  document.addEventListener('click', function(e){
+    if(!e.target.closest('.dropdown')) closeDrop();
+  });
+})();
+
+function normalizeCue(c){
+  return {
+    start: normTime(c.start || '00:00:00.000'),
+    end:   normTime(c.end   || '00:00:00.000'),
+    text:  (c.text || '').replace(/\r\n/g,'\n').replace(/\r/g,'\n').trim(),
+    translation: (c.translation || '').trim()
+  };
+}
+
+// ════════════════════════════════════════════
+// History (undo/redo)
+// ════════════════════════════════════════════
+function pushHistory(){
+  histStack = histStack.slice(0, histIdx + 1);
+  histStack.push(JSON.parse(JSON.stringify(cues)));
+  histIdx = histStack.length - 1;
+  if(histStack.length > 100){ histStack.shift(); histIdx--; }
+  updateUndoBtns();
+}
+function undo(){
+  if(histIdx > 0){
+    histIdx--;
+    cues = JSON.parse(JSON.stringify(histStack[histIdx]));
+    renderTable(); updateUndoBtns();
+    setStatus('↩ เลิกทำ');
+  }
+}
+function redo(){
+  if(histIdx < histStack.length - 1){
+    histIdx++;
+    cues = JSON.parse(JSON.stringify(histStack[histIdx]));
+    renderTable(); updateUndoBtns();
+    setStatus('↪ ทำซ้ำ');
+  }
+}
+function updateUndoBtns(){
+  document.getElementById('btnUndo').disabled = histIdx <= 0;
+  document.getElementById('btnRedo').disabled = histIdx >= histStack.length - 1;
+}
+
+// ════════════════════════════════════════════
+// Render table
+// ════════════════════════════════════════════
+function renderTable(){
+  const tbody = document.getElementById('tbody');
+  const emptyMsg = document.getElementById('emptyMsg');
+  if(cues.length === 0){
+    tbody.innerHTML = '';
+    emptyMsg.style.display = 'block';
+    document.getElementById('subTable').style.display = 'none';
+    updateStatus();
+    return;
+  }
+  emptyMsg.style.display = 'none';
+  document.getElementById('subTable').style.display = '';
+
+  tbody.innerHTML = '';
+  cues.forEach((cue, i) => {
+    const tr = document.createElement('tr');
+    tr.dataset.idx = i;
+
+    // Row number
+    const tdNum = document.createElement('td');
+    tdNum.className = 'td-num'; tdNum.textContent = i + 1;
+    tr.appendChild(tdNum);
+
+    // Start time
+    const tdS = document.createElement('td'); tdS.className = 'td-time';
+    const inS = document.createElement('input');
+    inS.type = 'text'; inS.className = 'time-in'; inS.value = cue.start;
+    inS.dataset.field = 'start'; inS.dataset.idx = i;
+    inS.addEventListener('blur', onTimeBlur);
+    inS.addEventListener('keydown', onCellKeydown);
+    tdS.appendChild(inS); tr.appendChild(tdS);
+
+    // End time
+    const tdE = document.createElement('td'); tdE.className = 'td-time';
+    const inE = document.createElement('input');
+    inE.type = 'text'; inE.className = 'time-in'; inE.value = cue.end;
+    inE.dataset.field = 'end'; inE.dataset.idx = i;
+    inE.addEventListener('blur', onTimeBlur);
+    inE.addEventListener('keydown', onCellKeydown);
+    tdE.appendChild(inE); tr.appendChild(tdE);
+
+    // Text
+    const tdT = document.createElement('td'); tdT.className = 'td-text';
+    const taT = document.createElement('textarea');
+    taT.className = 'text-in'; taT.value = cue.text; taT.rows = 1;
+    taT.dataset.field = 'text'; taT.dataset.idx = i;
+    taT.addEventListener('blur', onTextBlur);
+    taT.addEventListener('input', function(){ autoGrow(this); });
+    taT.addEventListener('keydown', onCellKeydown);
+    tdT.appendChild(taT); tr.appendChild(tdT);
+
+    // Translation
+    const tdTr = document.createElement('td'); tdTr.className = 'td-trans';
+    const taTr = document.createElement('textarea');
+    taTr.className = 'text-in trans-in'; taTr.value = cue.translation || ''; taTr.rows = 1;
+    taTr.dataset.field = 'translation'; taTr.dataset.idx = i;
+    taTr.addEventListener('blur', onTextBlur);
+    taTr.addEventListener('input', function(){ autoGrow(this); });
+    taTr.addEventListener('keydown', onCellKeydown);
+    tdTr.appendChild(taTr); tr.appendChild(tdTr);
+
+    // Actions
+    const tdA = document.createElement('td'); tdA.className = 'td-act';
+    tdA.innerHTML =
+      `<button class="act-btn" onclick="addCueAfter(${i})" title="เพิ่มบรรทัดใหม่ด้านล่าง (Ctrl+Enter)">+</button> ` +
+      `<button class="act-btn del" onclick="deleteCue(${i})" title="ลบบรรทัดนี้ (Ctrl+D)">×</button> ` +
+      `<button class="act-btn split" onclick="splitCue(${i})" title="แบ่งบรรทัดนี้ (Ctrl+Shift+S)">⌈</button>`;
+    tr.appendChild(tdA);
+
+    tbody.appendChild(tr);
+
+    // Auto-grow textareas
+    autoGrow(taT); autoGrow(taTr);
+  });
+  updateStatus();
+}
+
+// Auto-grow textarea height
+function autoGrow(ta){
+  ta.style.height = 'auto';
+  ta.style.height = Math.max(36, ta.scrollHeight) + 'px';
+}
+
+// ════════════════════════════════════════════
+// Cell event handlers
+// ════════════════════════════════════════════
+function onTimeBlur(e){
+  const el = e.target;
+  const idx = parseInt(el.dataset.idx);
+  const field = el.dataset.field;
+  const val = normTime(el.value);
+  el.classList.toggle('invalid', !isValidTime(val));
+  if(isValidTime(val)){
+    if(cues[idx][field] !== val){
+      cues[idx][field] = val;
+      el.value = val;
+      pushHistory();
+    }
+  }
+}
+
+function onTextBlur(e){
+  const el = e.target;
+  const idx = parseInt(el.dataset.idx);
+  const field = el.dataset.field;
+  const val = el.value;
+  if(cues[idx][field] !== val){
+    cues[idx][field] = val;
+    pushHistory();
+  }
+  updateStatus();
+}
+
+function onCellKeydown(e){
+  const el = e.target;
+  const idx = parseInt(el.dataset.idx);
+  const field = el.dataset.field;
+
+  // Ctrl+Z / Ctrl+Y
+  if(e.ctrlKey || e.metaKey){
+    if(e.key === 'z' && !e.shiftKey){ e.preventDefault(); undo(); return; }
+    if((e.key === 'y') || (e.key === 'z' && e.shiftKey)){ e.preventDefault(); redo(); return; }
+    if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); addCueAfter(idx); focusCell(idx+1,'text'); return; }
+    if(e.key === 'd'){ e.preventDefault(); deleteCueAndFocus(idx); return; }
+    if(e.key === 'S' && e.shiftKey){ e.preventDefault(); splitCue(idx); return; }
+    if(e.key === 's'){ e.preventDefault(); exportAs('srt'); return; }
+  }
+
+  // Tab: navigate between cells
+  if(e.key === 'Tab'){
+    e.preventDefault();
+    if(!e.shiftKey){
+      // Forward: start→end→text→trans→next start
+      if(field === 'start') focusCell(idx, 'end');
+      else if(field === 'end') focusCell(idx, 'text');
+      else if(field === 'text') focusCell(idx, 'translation');
+      else if(field === 'translation') { if(idx+1 < cues.length) focusCell(idx+1,'start'); else addCueAtEnd(); }
+    } else {
+      // Backward
+      if(field === 'translation') focusCell(idx, 'text');
+      else if(field === 'text') focusCell(idx, 'end');
+      else if(field === 'end') focusCell(idx, 'start');
+      else if(field === 'start') { if(idx > 0) focusCell(idx-1, 'translation'); }
+    }
+    return;
+  }
+
+  // Escape: blur (deselect)
+  if(e.key === 'Escape'){ el.blur(); }
+}
+
+function focusCell(rowIdx, field){
+  if(rowIdx < 0 || rowIdx >= cues.length) return;
+  const tbody = document.getElementById('tbody');
+  const row = tbody.rows[rowIdx];
+  if(!row) return;
+  const el = row.querySelector(`[data-field="${field}"]`);
+  if(el){ el.focus(); if(el.select) el.select(); }
+}
+
+// ════════════════════════════════════════════
+// Cue manipulations
+// ════════════════════════════════════════════
+function addCueAfter(idx){
+  // Guess timing: end of current + 500ms gap, duration 2s
+  const prev = cues[idx] || {end:'00:00:00.000'};
+  const startMs = timeToMs(prev.end) + 500;
+  const endMs = startMs + 2000;
+  const newCue = { start: msToTime(startMs), end: msToTime(endMs), text: '', translation: '' };
+  cues.splice(idx + 1, 0, newCue);
+  pushHistory();
+  renderTable();
+  setTimeout(() => focusCell(idx + 1, 'text'), 20);
+}
+
+function addCueAtEnd(){
+  if(cues.length === 0){
+    cues.push({ start:'00:00:00.000', end:'00:00:02.000', text:'', translation:'' });
+  } else {
+    addCueAfter(cues.length - 1);
+    return;
+  }
+  pushHistory();
+  renderTable();
+  setTimeout(() => focusCell(0, 'text'), 20);
+}
+
+function deleteCue(idx){
+  cues.splice(idx, 1);
+  pushHistory();
+  renderTable();
+}
+
+function deleteCueAndFocus(idx){
+  cues.splice(idx, 1);
+  pushHistory();
+  renderTable();
+  setTimeout(() => focusCell(Math.min(idx, cues.length-1), 'text'), 20);
+}
+
+function splitCue(idx){
+  const c = cues[idx];
+  const startMs = timeToMs(c.start);
+  const endMs = timeToMs(c.end);
+  const midMs = Math.round((startMs + endMs) / 2);
+
+  const lines = c.text.split('\n');
+  const half = Math.ceil(lines.length / 2);
+  const text1 = lines.slice(0, half).join('\n');
+  const text2 = lines.slice(half).join('\n');
+
+  const transLines = c.translation ? c.translation.split('\n') : [];
+  const transHalf = Math.ceil(transLines.length / 2);
+  const trans1 = transLines.slice(0, transHalf).join('\n');
+  const trans2 = transLines.slice(transHalf).join('\n');
+
+  cues[idx] = { start: c.start, end: msToTime(midMs-1), text: text1, translation: trans1 };
+  cues.splice(idx+1, 0, { start: msToTime(midMs), end: c.end, text: text2, translation: trans2 });
+  pushHistory();
+  renderTable();
+  setTimeout(() => focusCell(idx, 'text'), 20);
+  setStatus(`แบ่งบรรทัด ${idx+1} เป็น 2 บรรทัด`);
+}
+
+function mergeCues(idx){
+  if(idx >= cues.length - 1) return;
+  const c1 = cues[idx], c2 = cues[idx+1];
+  cues[idx] = {
+    start: c1.start, end: c2.end,
+    text: [c1.text, c2.text].filter(Boolean).join('\n'),
+    translation: [c1.translation, c2.translation].filter(Boolean).join('\n')
+  };
+  cues.splice(idx+1, 1);
+  pushHistory(); renderTable();
+  setStatus(`รวมบรรทัด ${idx+1} และ ${idx+2}`);
+}
+
+function removeFormatting(){
+  cues = cues.map(c => ({
+    ...c,
+    text: c.text.replace(/<[^>]+>/g,'').replace(/\{[^}]*\}/g,'').replace(/\\N/g,'\n').trim(),
+    translation: c.translation ? c.translation.replace(/<[^>]+>/g,'').trim() : ''
+  }));
+  pushHistory(); renderTable();
+  setStatus('ลบ tags ทั้งหมดแล้ว');
+}
+
+function clearAllTranslations(){
+  if(!confirm('ล้างคำแปลทั้งหมด?')) return;
+  cues = cues.map(c => ({...c, translation: ''}));
+  pushHistory(); renderTable();
+  setStatus('ล้างคำแปลแล้ว');
+}
+
+function shiftTimesDialog(){
+  const ms = parseInt(prompt('Shift ทุก cue กี่ milliseconds? (ลบ = เร็วขึ้น, บวก = ช้าลง)\nตัวอย่าง: 1000 หรือ -500', '0') || '0');
+  if(isNaN(ms) || ms === 0) return;
+  cues = cues.map(c => ({
+    ...c,
+    start: msToTime(Math.max(0, timeToMs(c.start) + ms)),
+    end:   msToTime(Math.max(0, timeToMs(c.end)   + ms))
+  }));
+  pushHistory(); renderTable();
+  setStatus(`Shift เวลา ${ms > 0 ? '+' : ''}${ms}ms แล้ว`);
+}
+
+// ════════════════════════════════════════════
+// Global keyboard shortcut (outside table)
+// ════════════════════════════════════════════
+document.addEventListener('keydown', function(e){
+  const tag = (document.activeElement || {}).tagName;
+  if(tag === 'INPUT' || tag === 'TEXTAREA') return; // handled per-cell
+  if(e.ctrlKey || e.metaKey){
+    if(e.key === 'z' && !e.shiftKey){ e.preventDefault(); undo(); }
+    else if(e.key === 'y' || (e.key === 'z' && e.shiftKey)){ e.preventDefault(); redo(); }
+    else if(e.key === 's'){ e.preventDefault(); exportAs('srt'); }
+  }
+});
+
+// ════════════════════════════════════════════
+// Time helpers
+// ════════════════════════════════════════════
+function normTime(t){
+  if(!t) return '00:00:00.000';
+  t = String(t).replace(/,/g,'.').trim();
+  // If only mm:ss.mmm, prepend 00:
+  const parts = t.split(':');
+  if(parts.length === 2) t = '00:' + t;
+  // Ensure milliseconds
+  if(!t.includes('.')) t += '.000';
+  else {
+    const [main, ms] = t.split('.');
+    t = main + '.' + (ms + '000').slice(0, 3);
+  }
+  return t;
+}
+
+function isValidTime(t){
+  return /^\d{2}:\d{2}:\d{2}\.\d{3}$/.test(t);
+}
+
+function timeToMs(t){
+  t = normTime(t);
+  const [hms, ms] = t.split('.');
+  const [h, m, s] = hms.split(':').map(Number);
+  return (h*3600 + m*60 + s)*1000 + parseInt((ms+'000').slice(0,3));
+}
+
+function msToTime(ms){
+  ms = Math.max(0, Math.round(ms));
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  const s = Math.floor((ms % 60000) / 1000);
+  const f = ms % 1000;
+  return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' +
+         String(s).padStart(2,'0') + '.' + String(f).padStart(3,'0');
+}
+
+// ════════════════════════════════════════════
+// Ehe encoding — clone ตรงจาก editsub.com
+// ════════════════════════════════════════════
+function _ehe(t){
+  if(!t) return '';
+  const e = s => new TextEncoder().encode(s);
+  const n = i => ('0' + Number(i).toString(16)).substr(-2);
+  const r = i => e(EDITSUB_KEY).reduce((s, o) => s ^ o, i);
+  return Array.from(e(t)).map(r).map(n).join('');
+}
+
+// ════════════════════════════════════════════
+// Translate (fallback chain: worker → CORS proxies → direct)
+// ════════════════════════════════════════════
+function _sig(ms){ const c = new AbortController(); setTimeout(() => c.abort(), ms); return c.signal; }
+
+async function editsubTranslate(texts, toLang){
+  const encoded = texts.map(t => _ehe(t));
+  const payload = JSON.stringify({ texts: encoded, to: toLang });
+  const hdrs = { 'Content-Type': 'application/json' };
+  const EDITSUB_URL = 'https://editsub.com/api/translate';
+
+  // สร้าง list ของ endpoints ที่จะลอง (race)
+  const endpoints = [];
+  if(WORKER_URL) endpoints.push(WORKER_URL + '/api/editsub');
+  endpoints.push('https://corsproxy.io/?' + encodeURIComponent(EDITSUB_URL));
+  endpoints.push('https://api.allorigins.win/raw?url=' + encodeURIComponent(EDITSUB_URL));
+  endpoints.push(EDITSUB_URL);
+
+  const races = endpoints.map(ep => new Promise(async (res, rej) => {
+    try {
+      const r = await fetch(ep, { method:'POST', headers:hdrs, body:payload, signal:_sig(35000) });
+      if(!r.ok) return rej('http ' + r.status);
+      let j;
+      const txt = await r.text();
+      try { j = JSON.parse(txt); } catch(_){
+        try { j = JSON.parse(JSON.parse(txt).contents); } catch(__){ return rej('parse'); }
+      }
+      if(j && j.translatedText && j.translatedText.length > 0) return res(j.translatedText);
+      rej('empty');
+    } catch(e){ rej(e); }
+  }));
+
+  return Promise.any(races).catch(() => { throw new Error('แปลภาษาไม่ได้ — ลอง deploy worker.js'); });
+}
+
+async function doTranslateAll(){
+  if(_translating) return;
+  await _translateCues(cues.map((_,i) => i));
+}
+
+async function doTranslateSelected(){
+  if(_translating) return;
+  // Translate rows where translation is empty
+  const indices = cues.map((_,i) => i).filter(i => !cues[i].translation);
+  if(indices.length === 0){ setStatus('ทุกบรรทัดมีคำแปลแล้ว'); return; }
+  await _translateCues(indices);
+}
+
+async function _translateCues(indices){
+  if(indices.length === 0){ setStatus('ไม่มีบรรทัดที่ต้องแปล'); return; }
+  _translating = true;
+  document.getElementById('btnTranslate').disabled = true;
+  document.getElementById('btnTranslateSel').disabled = true;
+  const toLang = document.getElementById('transLang').value;
+  const progBox = document.getElementById('transProgBox');
+  const progMsg = document.getElementById('transProgMsg');
+  const progFill = document.getElementById('transProgFill');
+  progBox.classList.add('show');
+
+  try {
+    // Split into batches of ~4500 chars
+    const batches = [];
+    let cur = [], curLen = 0;
+    for(const i of indices){
+      const t = cues[i].text;
+      if(curLen + t.length > 4500 && cur.length > 0){ batches.push(cur); cur=[]; curLen=0; }
+      cur.push(i); curLen += t.length;
+    }
+    if(cur.length > 0) batches.push(cur);
+
+    let done = 0;
+    for(const batch of batches){
+      progMsg.textContent = `กำลังแปล ${done + batch.length}/${indices.length} บรรทัด…`;
+      progFill.style.width = Math.round(done / indices.length * 100) + '%';
+
+      const texts = batch.map(i => cues[i].text);
+      const translated = await editsubTranslate(texts, toLang);
+      batch.forEach((idx, j) => {
+        if(translated[j] !== undefined) cues[idx].translation = translated[j];
+      });
+      // Update DOM live
+      batch.forEach(idx => {
+        const tbody = document.getElementById('tbody');
+        const row = tbody.rows[idx];
+        if(row){
+          const ta = row.querySelector('[data-field="translation"]');
+          if(ta){ ta.value = cues[idx].translation; autoGrow(ta); }
+        }
+      });
+      done += batch.length;
+    }
+
+    pushHistory();
+    setStatus(`แปล ${indices.length} บรรทัด เป็น ${toLang} เสร็จแล้ว`);
+  } catch(e){
+    alert('แปลภาษาล้มเหลว: ' + (e.message || e));
+    setStatus('❌ แปลภาษาล้มเหลว');
+  } finally {
+    _translating = false;
+    document.getElementById('btnTranslate').disabled = false;
+    document.getElementById('btnTranslateSel').disabled = false;
+    progBox.classList.remove('show');
+  }
+}
+
+// ════════════════════════════════════════════
+// Subtitle parsers (auto-detect format)
+// ════════════════════════════════════════════
+function parseCues(content){
+  const fmt = autoDetect(content);
+  if(fmt === 'timedtext') return parseTimedtext(content);
+  if(fmt === 'vtt') return parseVTT(content);
+  if(fmt === 'srt') return parseSRT(content);
+  if(fmt === 'sbv') return parseSBV(content);
+  if(fmt === 'ass') return parseASS(content);
+  // Plain text: each line becomes a cue
+  return content.trim().split('\n').filter(l=>l.trim()).map((l,i) => ({
+    start: msToTime(i * 2000), end: msToTime(i * 2000 + 1800), text: l.trim(), translation: ''
+  }));
+}
+
+function autoDetect(c){
+  const h = c.trimStart().slice(0, 200);
+  if(h.includes('<timedtext') || h.includes('<text ')) return 'timedtext';
+  if(h.startsWith('WEBVTT')) return 'vtt';
+  if(/^\d+\r?\n\d+:\d+:\d+[,\.]/.test(h.trim())) return 'srt';
+  if(h.includes('[Script Info]') || /^Dialogue:/m.test(c)) return 'ass';
+  if(/^\d+:\d+:\d+\.\d+,\d+:\d+:\d+\.\d+/.test(h.trim())) return 'sbv';
+  if(/\d+:\d+:\d+[,\.]\d+\s+-->\s+\d+/.test(c)) return 'srt';
+  return 'txt';
+}
+
+function parseVTT(v){
+  const L = v.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+  let i = 0;
+  while(i < L.length){const l=L[i].trim();if(l.startsWith('WEBVTT')||l.startsWith('Kind:')||l.startsWith('Language:')||l==='')i++;else break;}
+  if(i<L.length&&L[i].trim()==='STYLE'){i++;while(i<L.length&&L[i].trim()!=='')i++;while(i<L.length&&L[i].trim()==='')i++;}
+  while(i<L.length&&L[i].trim().startsWith('NOTE')){i++;while(i<L.length&&L[i].trim()!=='')i++;while(i<L.length&&L[i].trim()==='')i++;}
+  const cues=[];
+  while(i<L.length){
+    if(L[i].trim()===''){i++;continue;}
+    if(i+1<L.length&&L[i+1].includes('-->'))i++;
+    if(i<L.length&&L[i].includes('-->')){
+      const m=L[i].trim().match(/([\d:.]+)\s*-->\s*([\d:.]+)/);
+      if(m){const start=m[1],end=m[2];i++;const tl=[];while(i<L.length&&L[i].trim()!==''){tl.push(L[i].trim().replace(/<[^>]+>/g,''));i++;}if(tl.length)cues.push({start,end,text:tl.join('\n'),translation:''});}else i++;
+    }else i++;
+  }
+  return cues;
+}
+
+function parseSRT(s){
+  const blocks=s.replace(/\r\n/g,'\n').replace(/\r/g,'\n').trim().split(/\n\n+/);
+  const cues=[];
+  for(const b of blocks){
+    const lines=b.split('\n');
+    let tLine=-1;
+    for(let j=0;j<lines.length;j++){if(lines[j].includes('-->')){tLine=j;break;}}
+    if(tLine<0)continue;
+    const m=lines[tLine].match(/([\d:,.]+)\s*-->\s*([\d:,.]+)/);
+    if(!m)continue;
+    const text=lines.slice(tLine+1).join('\n').trim();
+    if(text)cues.push({start:m[1].replace(/,/g,'.'),end:m[2].replace(/,/g,'.'),text,translation:''});
+  }
+  return cues;
+}
+
+function parseSBV(s){
+  const blocks=s.replace(/\r\n/g,'\n').replace(/\r/g,'\n').trim().split(/\n\n+/);
+  const cues=[];
+  for(const b of blocks){
+    const lines=b.split('\n');
+    const m=(lines[0]||'').match(/([\d:.]+),([\d:.]+)/);
+    if(!m)continue;
+    const text=lines.slice(1).join('\n').trim();
+    if(text)cues.push({start:m[1],end:m[2],text,translation:''});
+  }
+  return cues;
+}
+
+function parseASS(s){
+  const cues=[];
+  const lines=s.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+  for(const line of lines){
+    const m=line.match(/^Dialogue:\s*\d+,([\d:.]+),([\d:.]+),([^,]*),([^,]*),(\d+),(\d+),(\d+),([^,]*),(.*)/);
+    if(m){const text=m[9].replace(/\\N/g,'\n').replace(/\{[^}]*\}/g,'').trim();if(text)cues.push({start:m[1],end:m[2],text,translation:''});}
+  }
+  return cues;
+}
+
+function parseTimedtext(xml){
+  const cues=[];
+  try{
+    const doc=new DOMParser().parseFromString(xml,'text/xml');
+    const ps=doc.querySelectorAll('p');
+    for(const p of ps){
+      const t=parseInt(p.getAttribute('t')||'0',10);
+      const d=parseInt(p.getAttribute('d')||'0',10);
+      let text='';
+      if(p.querySelectorAll('s').length>0){const parts=[];for(const child of p.childNodes){if(child.nodeType===3)parts.push(child.textContent);else if(child.nodeName==='s')parts.push(child.textContent);}text=parts.join('').trim();}
+      else{text=p.textContent.trim();}
+      if(!text)continue;
+      cues.push({start:msToTime(t),end:msToTime(t+d),text,translation:''});
+    }
+  }catch(e){}
+  return cues;
+}
+
+// ════════════════════════════════════════════
+// Export / converters
+// ════════════════════════════════════════════
+function srtTime(t){ return normTime(t).replace('.',','); }
+
+function cuesToSrt(cs){
+  return cs.map((c,i) => (i+1)+'\n'+srtTime(c.start)+' --> '+srtTime(c.end)+'\n'+c.text).join('\n\n')+'\n';
+}
+function cuesToVtt(cs){
+  return 'WEBVTT\n\n' + cs.map((c,i) => (i+1)+'\n'+normTime(c.start)+' --> '+normTime(c.end)+'\n'+c.text).join('\n\n')+'\n';
+}
+function cuesToTxt(cs){
+  const seen=new Set();
+  return cs.map(c=>c.text).filter(t=>{if(seen.has(t))return false;seen.add(t);return true;}).join('\n')+'\n';
+}
+function cuesToSbv(cs){
+  return cs.map(c => normTime(c.start)+','+normTime(c.end)+'\n'+c.text).join('\n\n')+'\n';
+}
+function cuesToAss(cs){
+  let out=`[Script Info]\nTitle: C2 Sub Export\nScriptType: v4.00+\nCollisions: Normal\nPlayDepth: 0\n\n[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\nStyle: Default,Arial,20,&H00FFFFFF,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,2,10,10,10,1\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n`;
+  for(const c of cs){ const t=c.text.replace(/\n/g,'\\N'); out+=`Dialogue: 0,${normTime(c.start)},${normTime(c.end)},Default,,0,0,0,,${t}\n`; }
+  return out;
+}
+function cuesToBilingual(cs){
+  return cs.map((c,i) => {
+    const lines = [c.text];
+    if(c.translation) lines.push(c.translation);
+    return (i+1)+'\n'+srtTime(c.start)+' --> '+srtTime(c.end)+'\n'+lines.join('\n');
+  }).join('\n\n')+'\n';
+}
+
+function exportAs(fmt){
+  // Flush any pending edits from focused cell
+  const active = document.activeElement;
+  if(active && (active.tagName === 'TEXTAREA' || active.tagName === 'INPUT')){
+    const idx = parseInt(active.dataset.idx);
+    const field = active.dataset.field;
+    if(!isNaN(idx) && field && cues[idx]){ cues[idx][field] = active.value; }
+  }
+
+  let content, ext, mime;
+  if(fmt === 'srt')   { content = cuesToSrt(cues);        ext = 'srt'; }
+  else if(fmt === 'vtt')       { content = cuesToVtt(cues);        ext = 'vtt'; }
+  else if(fmt === 'sbv')       { content = cuesToSbv(cues);        ext = 'sbv'; }
+  else if(fmt === 'ass')       { content = cuesToAss(cues);        ext = 'ass'; }
+  else if(fmt === 'txt')       { content = cuesToTxt(cues);        ext = 'txt'; }
+  else if(fmt === 'bilingual') { content = cuesToBilingual(cues);  ext = 'srt'; }
+  mime = 'text/plain;charset=utf-8';
+
+  const a = document.createElement('a');
+  const blob = new Blob(['\ufeff'+content], { type: mime });
+  a.href = URL.createObjectURL(blob);
+  a.download = (title||'subtitle').replace(/[\\/:*?"<>|]/g,'_').trim() + '.' + ext;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  setStatus(`ดาวน์โหลด ${fmt.toUpperCase()} แล้ว`);
+}
+
+// ════════════════════════════════════════════
+// Import file
+// ════════════════════════════════════════════
+function onImportFile(input){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try {
+      const content = e.target.result;
+      const parsed = parseCues(content);
+      if(!parsed || parsed.length === 0){ alert('ไม่พบ subtitle ในไฟล์นี้'); return; }
+      if(cues.length > 0 && !confirm(`แทนที่ ${cues.length} บรรทัดเดิมด้วยไฟล์ใหม่ (${parsed.length} บรรทัด)?`)) return;
+      // Set title from filename
+      const fname = file.name.replace(/\.[^.]+$/, '');
+      if(fname && fname !== title){
+        title = fname;
+        document.getElementById('titleInput').value = title;
+        document.title = title + ' — C2 Sub Editor';
+      }
+      cues = parsed.map(normalizeCue);
+      pushHistory(); renderTable();
+      setStatus(`นำเข้า ${cues.length} บรรทัดจาก ${file.name}`);
+    } catch(err){ alert('อ่านไฟล์ไม่ได้: ' + err.message); }
+  };
+  reader.readAsText(file, 'utf-8');
+  input.value = '';
+}
+
+// Drag and drop import
+function setupDragDrop(){
+  const overlay = document.getElementById('dropOverlay');
+  let dragCnt = 0;
+  document.addEventListener('dragenter', e => { dragCnt++; if(e.dataTransfer.types.includes('Files')) overlay.classList.add('show'); });
+  document.addEventListener('dragleave', e => { dragCnt--; if(dragCnt <= 0){ dragCnt=0; overlay.classList.remove('show'); } });
+  document.addEventListener('dragover', e => e.preventDefault());
+  document.addEventListener('drop', e => {
+    e.preventDefault(); dragCnt=0; overlay.classList.remove('show');
+    const file = e.dataTransfer.files[0];
+    if(!file) return;
+    const fakeInput = { files: [file] };
+    onImportFile(fakeInput);
+  });
+}
+
+// ════════════════════════════════════════════
+// Export dropdown
+// ════════════════════════════════════════════
+function toggleDrop(id){
+  const menu = document.getElementById(id + 'Menu');
+  menu.classList.toggle('open');
+}
+function closeDrop(){
+  document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('open'));
+}
+
+// ════════════════════════════════════════════
+// Status / UI helpers
+// ════════════════════════════════════════════
+function setStatus(msg){
+  document.getElementById('statusLeft').textContent = msg;
+  setTimeout(() => {
+    if(document.getElementById('statusLeft').textContent === msg)
+      document.getElementById('statusLeft').textContent = `${cues.length} บรรทัด`;
+  }, 3000);
+}
+
+function updateStatus(){
+  const cnt = cues.length;
+  document.getElementById('cueCount').textContent = cnt + ' บรรทัด';
+  document.getElementById('statusLeft').textContent = cnt + ' บรรทัด';
+}
+
+function goBack(){
+  // Try to close this window first; if not possible, go to index.html
+  if(window.opener || window.history.length <= 1){
+    window.close();
+    setTimeout(() => { window.location.href = 'index.html'; }, 200);
+  } else {
+    window.location.href = 'index.html';
+  }
+}
+</script>
+</body>
+</html>

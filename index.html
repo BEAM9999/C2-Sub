@@ -1,0 +1,1604 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png?v=2">
+    <link rel="shortcut icon" type="image/png" href="favicon-96x96.png?v=2">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>C2 Sub – Download &amp; Edit Subtitles</title>
+<style>
+:root{
+  --bg:#141420;--surface:#1c1c2e;--surface2:#252540;--surface3:#2e2e4a;
+  --accent:#00d4aa;--accent2:#00b894;--accent-dim:rgba(0,212,170,.12);
+  --text:#e0e0ec;--text2:#c0c0d4;--muted:#707090;--border:#2e2e48;
+  --danger:#ff6b6b;--success:#00d4aa;--warn:#ffc107;
+  --blue:#5b9bf5;--purple:#a78bfa;--orange:#f59e42;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;min-height:100vh;line-height:1.5}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+::selection{background:var(--accent);color:#111}
+
+/* ── Header ── */
+.site-header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;height:56px;position:sticky;top:0;z-index:50}
+.logo{font-size:1.35rem;font-weight:800;color:var(--accent);white-space:nowrap;margin-right:20px;letter-spacing:-.5px;cursor:pointer}
+.logo span{color:var(--text2)}
+.nav-links{display:flex;gap:3px}
+.nav-btn{padding:8px 13px;border-radius:8px;border:none;background:none;color:var(--muted);font-size:.82rem;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
+.nav-btn:hover,.nav-btn.active{color:var(--text);background:var(--surface2)}
+.header-spacer{flex:1}
+
+/* ── Pages ── */
+.page{display:none;max-width:860px;margin:0 auto;padding:20px 20px 40px}
+.page.active{display:block}
+
+/* ── Search bar ── */
+.search-wrap{max-width:720px;margin:28px auto 0;padding:0 20px}
+.search-box{display:flex;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface);transition:border-color .2s}
+.search-box:focus-within{border-color:var(--accent)}
+#urlInput{flex:1;padding:13px 16px;border:none;outline:none;font-size:.95rem;color:var(--text);background:transparent}
+#urlInput::placeholder{color:var(--muted)}
+#searchBtn{padding:13px 24px;background:var(--accent);border:none;color:#111;font-weight:700;font-size:.9rem;cursor:pointer;transition:background .2s;white-space:nowrap}
+#searchBtn:hover{background:var(--accent2)}
+#searchBtn:disabled{opacity:.5;cursor:not-allowed}
+.search-actions{display:flex;gap:8px;max-width:720px;margin:10px auto 0;padding:0 20px;justify-content:flex-end}
+.sm-btn{padding:7px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--muted);font-size:.82rem;font-weight:600;cursor:pointer;transition:all .2s}
+.sm-btn:hover{background:var(--surface3);color:var(--text)}
+
+/* ── Main ── */
+.error-card{background:rgba(255,107,107,.1);border:1px solid rgba(255,107,107,.3);border-radius:10px;padding:12px 16px;color:var(--danger);font-size:.88rem;margin-bottom:16px;display:none}
+#proxyStatus{text-align:center;font-size:.73rem;color:var(--muted);padding:4px 0 10px;display:none}
+.spinner{text-align:center;padding:50px 0;display:none}
+.spinner .ring{width:44px;height:44px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px}
+.spinner p{color:var(--muted);font-size:.88rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Result card ── */
+.result-card{background:var(--surface);border-radius:14px;border:1px solid var(--border);overflow:hidden;display:none}
+.vid-header{display:flex;gap:16px;padding:18px 20px 16px;border-bottom:1px solid var(--border)}
+.vid-thumb{width:130px;height:85px;object-fit:cover;border-radius:8px;flex-shrink:0;background:var(--surface2)}
+.vid-thumb-ph{width:130px;height:85px;border-radius:8px;background:var(--surface2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:2.2rem}
+.vid-info{flex:1;min-width:0}
+.vid-title{font-size:1.05rem;font-weight:700;line-height:1.4;margin-bottom:4px;color:#fff}
+.vid-meta{font-size:.8rem;color:var(--muted)}
+
+/* ── Settings / Translate ── */
+.panel-toggle{display:flex;align-items:center;gap:6px;padding:10px 20px;border-bottom:1px solid var(--border);cursor:pointer;color:var(--muted);font-size:.84rem;transition:color .15s;user-select:none}
+.panel-toggle:hover{color:var(--text)}
+.panel-toggle .arrow{transition:transform .2s;font-size:.7rem}
+.panel-toggle .arrow.open{transform:rotate(180deg)}
+.panel-body{display:none;padding:14px 20px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.panel-body.open{display:block}
+.settings-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.settings-row label{font-size:.82rem;color:var(--text2);font-weight:500}
+select.inp{padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:.82rem;outline:none}
+select.inp:focus{border-color:var(--accent)}
+.translate-bar{padding:12px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.translate-bar label{font-size:.84rem;color:var(--text2);white-space:nowrap}
+.btn-go{padding:6px 16px;border-radius:6px;border:none;background:var(--accent);color:#111;font-size:.82rem;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn-go:hover{background:var(--accent2)}
+.btn-go:disabled{opacity:.4;cursor:not-allowed}
+.status-text{font-size:.75rem;color:var(--muted)}
+
+/* ── Subtitle rows ── */
+.sub-section-title{padding:10px 20px 6px;font-size:.78rem;font-weight:700;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--surface2)}
+.sub-actions-bar{display:flex;gap:8px;padding:10px 20px;border-bottom:1px solid var(--border);align-items:center;flex-wrap:wrap}
+.sub-row{display:flex;align-items:center;gap:8px;padding:10px 20px;border-bottom:1px solid var(--border);transition:background .12s}
+.sub-row:last-child{border-bottom:none}
+.sub-row:hover{background:var(--surface2)}
+.btn-fmt{display:inline-flex;align-items:center;gap:3px;padding:5px 10px;border-radius:6px;border:none;font-size:.74rem;font-weight:700;cursor:pointer;transition:all .15s;text-transform:uppercase;white-space:nowrap}
+.btn-fmt:disabled{opacity:.35;cursor:not-allowed}
+.btn-srt,.btn-txt,.btn-raw{background:var(--accent);color:#111}
+.btn-srt:hover,.btn-txt:hover,.btn-raw:hover{background:var(--accent2)}
+.btn-edit{background:var(--surface3);color:var(--text2);border:1px solid var(--border)!important}
+.btn-edit:hover{background:var(--border);color:#fff}
+.sub-lang{flex:1;font-size:.88rem;font-weight:500;color:var(--text)}
+.lang-code{font-size:.72rem;color:var(--muted);margin-left:4px;text-transform:uppercase}
+.spin-sm{display:inline-block;width:12px;height:12px;border:2px solid rgba(0,0,0,.2);border-top-color:#111;border-radius:50%;animation:spin .5s linear infinite}
+
+/* ── Episodes ── */
+.episodes-section{display:none;border-top:1px solid var(--border)}
+.ep-title-bar{padding:14px 20px 8px;font-size:.84rem;font-weight:700;color:var(--text2)}
+.ep-list{padding:0 20px 14px;display:flex;flex-wrap:wrap;gap:10px}
+.ep-card{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s;min-width:200px;max-width:280px;flex:1}
+.ep-card:hover{border-color:var(--accent);background:var(--surface3)}
+.ep-card.active{border-color:var(--accent);background:var(--accent-dim)}
+.ep-thumb{width:56px;height:38px;border-radius:5px;object-fit:cover;flex-shrink:0;background:var(--surface3)}
+.ep-thumb-ph{width:56px;height:38px;border-radius:5px;background:var(--surface3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.9rem}
+.ep-name{font-size:.8rem;font-weight:600;color:var(--text);line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical}
+
+/* ── Sections ── */
+.section-title{font-size:.84rem;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.section-title::before{content:'';flex:0 0 3px;height:16px;background:var(--accent);border-radius:2px}
+.sites-section{margin-top:32px}
+.sites-grid{display:flex;flex-wrap:wrap;gap:8px}
+.site-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:var(--surface);border:1px solid var(--border);border-radius:18px;font-size:.8rem;color:var(--text2);transition:all .15s;cursor:pointer;text-decoration:none}
+.site-chip:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);transform:translateY(-1px)}
+.site-chip img{width:15px;height:15px;border-radius:3px;object-fit:contain}
+.howto-section{margin-top:32px}
+.howto-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.howto-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;text-align:center}
+.howto-num{width:32px;height:32px;border-radius:50%;background:var(--accent);color:#111;font-weight:800;font-size:.9rem;display:inline-flex;align-items:center;justify-content:center;margin-bottom:8px}
+.howto-card h4{font-size:.88rem;font-weight:700;margin-bottom:4px;color:#fff}
+.howto-card p{font-size:.78rem;color:var(--muted);line-height:1.5}
+
+/* ── Editor / Converter page ── */
+.tool-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:24px}
+.tool-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;cursor:pointer;transition:all .18s;text-align:center}
+.tool-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,212,170,.1)}
+.tool-card .tc-icon{font-size:2rem;margin-bottom:10px}
+.tool-card h3{font-size:.95rem;font-weight:700;color:#fff;margin-bottom:6px}
+.tool-card p{font-size:.78rem;color:var(--muted);line-height:1.5}
+.upload-zone{border:2px dashed var(--border);border-radius:12px;padding:40px 20px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:20px;background:var(--surface)}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:var(--accent-dim)}
+.upload-zone .uz-icon{font-size:2.5rem;margin-bottom:8px}
+.upload-zone p{color:var(--muted);font-size:.85rem}
+.upload-zone .uz-formats{color:var(--text2);font-size:.72rem;margin-top:6px}
+.editor-area{display:none}
+.editor-top{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.editor-top .filename{font-size:.9rem;font-weight:600;color:var(--accent);flex:1}
+.editor-top .file-info{font-size:.75rem;color:var(--muted)}
+textarea.edit-ta{width:100%;min-height:380px;resize:vertical;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Cascadia Code','Fira Code','Courier New',monospace;font-size:.8rem;line-height:1.55;padding:16px;outline:none}
+textarea.edit-ta:focus{border-color:var(--accent)}
+.editor-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.converter-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:16px 0}
+.converter-row label{font-size:.85rem;color:var(--text2);font-weight:500}
+
+/* ── Footer ── */
+.site-footer{background:var(--surface);border-top:1px solid var(--border);padding:24px 20px;margin-top:40px;text-align:center}
+.footer-brand{font-size:1.1rem;font-weight:800;color:var(--accent);margin-bottom:6px}
+.footer-brand span{color:var(--text2)}
+.footer-text{font-size:.75rem;color:var(--muted);line-height:1.7}
+
+/* ── Modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:200;padding:16px}
+.modal-overlay.active{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;width:100%;max-width:740px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.4)}
+.modal-head{display:flex;align-items:center;gap:10px;padding:15px 20px;border-bottom:1px solid var(--border)}
+.modal-head h3{flex:1;font-size:.95rem;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.modal-close{background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--muted);padding:2px 6px;border-radius:6px}
+.modal-close:hover{color:#fff}
+.tab-bar{display:flex;gap:4px;padding:12px 20px 0}
+.tab-btn{padding:6px 14px;border-radius:7px 7px 0 0;border:1px solid transparent;background:none;color:var(--muted);font-size:.82rem;font-weight:600;cursor:pointer;transition:all .12s}
+.tab-btn.active{background:var(--surface2);border-color:var(--border);color:var(--text)}
+.tab-btn:hover:not(.active){color:var(--text2)}
+.modal-info{padding:4px 20px 6px;font-size:.72rem;color:var(--muted)}
+.modal-body{flex:1;overflow:hidden;display:flex;flex-direction:column;padding:0 20px 12px}
+#subTextarea{flex:1;min-height:340px;max-height:420px;resize:none;background:var(--surface2);border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;color:var(--text);font-family:'Cascadia Code','Fira Code','Courier New',monospace;font-size:.8rem;line-height:1.55;padding:14px;outline:none}
+#subTextarea:not([readonly]){background:#1a1a32;border-color:var(--accent)}
+.modal-loading{text-align:center;padding:36px 0;display:none}
+.modal-loading .ring{width:34px;height:34px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px}
+.modal-actions{display:flex;gap:8px;padding:12px 20px 18px;border-top:1px solid var(--border);flex-wrap:wrap;align-items:center}
+.btn-act{padding:7px 16px;border-radius:7px;border:none;font-size:.83rem;font-weight:600;cursor:pointer;transition:all .15s}
+.btn-copy{background:var(--accent);color:#111}
+.btn-copy:hover{background:var(--accent2)}
+.btn-dl{background:var(--surface2);color:var(--text);border:1px solid var(--border)!important;display:none}
+.btn-dl:hover{background:var(--surface3)}
+.btn-edit-toggle{background:var(--surface3);color:var(--text2);border:1px solid var(--border)!important}
+.btn-edit-toggle:hover{background:var(--border);color:#fff}
+.btn-edit-toggle.editing{background:var(--accent);color:#111;border-color:var(--accent)!important}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-blue:hover{background:#4a8ae4}
+.btn-purple{background:var(--purple);color:#fff}
+.btn-purple:hover{background:#9070f0}
+.copied{background:var(--success)!important;color:#111!important}
+.modal-translate-row{display:flex;gap:8px;padding:0 20px 8px;align-items:center;flex-wrap:wrap}
+.modal-translate-row select{padding:5px 8px;border-radius:5px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:.78rem}
+.modal-translate-row .btn-act{padding:5px 12px;font-size:.78rem}
+
+/* ── Auto-translate expand ── */
+.auto-trans-toggle{display:flex;align-items:center;gap:6px;padding:10px 20px;border-bottom:1px solid var(--border);cursor:pointer;color:var(--blue);font-size:.84rem;font-weight:600;transition:color .15s;user-select:none;background:var(--surface2)}
+.auto-trans-toggle:hover{color:var(--accent)}
+.auto-trans-list{display:none;max-height:400px;overflow-y:auto}
+.auto-trans-list.open{display:block}
+
+/* responsive */
+@media(max-width:600px){
+  .vid-header{flex-direction:column;gap:10px}
+  .vid-thumb,.vid-thumb-ph{width:100%;height:auto;max-height:160px}
+  .sub-row{flex-wrap:wrap}
+  .tool-cards{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ Header ══ -->
+<header class="site-header">
+  <div class="logo" onclick="switchPage('download')">C2<span>Sub</span></div>
+  <nav class="nav-links">
+    <button class="nav-btn active" data-page="download" onclick="switchPage('download')">📥 ดาวน์โหลด</button>
+    <button class="nav-btn" data-page="editor" onclick="switchPage('editor')">✏️ แก้ไข</button>
+    <button class="nav-btn" data-page="converter" onclick="switchPage('converter')">🔄 แปลงไฟล์</button>
+    <button class="nav-btn" data-page="translator" onclick="switchPage('translator')">🌐 แปลภาษา</button>
+  </nav>
+  <div class="header-spacer"></div>
+  <a href="editor.html" target="_blank" rel="noopener" class="nav-btn" style="color:var(--accent);font-size:.82rem;display:inline-flex;align-items:center;gap:4px" title="เปิด C2 Sub Editor">✏️ Editor</a>
+</header>
+
+<!-- ═══════════════ PAGE: Download ═══════════════ -->
+<div class="search-wrap">
+  <div class="search-box">
+    <input type="text" id="urlInput" placeholder="วางลิงก์วิดีโอ YouTube, WeTV, Viu, Netflix…" autocomplete="off" spellcheck="false"/>
+    <button id="searchBtn" onclick="doSearch()">ดาวน์โหลด</button>
+  </div>
+</div>
+<div class="search-actions">
+  <button class="sm-btn" onclick="doClear()">↺ ล้าง</button>
+</div>
+
+<div class="page active" id="page-download">
+  <div class="error-card" id="errorCard"></div>
+  <div id="proxyStatus"></div>
+  <div class="spinner" id="spinner"><div class="ring"></div><p id="spinnerMsg">กำลังค้นหา subtitle…</p></div>
+
+  <div class="result-card" id="resultCard">
+    <div class="vid-header">
+      <img class="vid-thumb" id="vidThumb" src="" alt="" onerror="this.style.display='none';document.getElementById('vidThumbPh').style.display='flex'"/>
+      <div class="vid-thumb-ph" id="vidThumbPh" style="display:none">🎬</div>
+      <div class="vid-info">
+        <div class="vid-title" id="vidTitle">—</div>
+        <div class="vid-meta" id="vidMeta"></div>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div class="panel-toggle" onclick="togglePanel('settings')">⚙️ <span>การตั้งค่า</span> <span class="arrow" id="settingsArrow">▼</span></div>
+    <div class="panel-body" id="settingsPanel">
+      <div class="settings-row">
+        <label>รูปแบบเริ่มต้น:</label>
+        <select class="inp" id="defaultFmt" onchange="localStorage.setItem('c2sub_fmt',this.value)">
+          <option value="srt">SRT</option><option value="txt">TXT</option><option value="vtt">VTT (raw)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Translate bar -->
+    <div class="translate-bar">
+      <label>🌐 แปลจาก:</label>
+      <select class="inp" id="translateFrom"><option value="auto">ตรวจอัตโนมัติ</option></select>
+      <label>เป็น:</label>
+      <select class="inp" id="translateTo"></select>
+      <button class="btn-go" id="translateBtn" onclick="translateSubtitle()">แปลภาษา</button>
+      <span class="status-text" id="translateStatus"></span>
+    </div>
+
+    <!-- Batch actions -->
+    <div class="sub-actions-bar">
+      <button class="sm-btn" onclick="downloadAll('srt')">⬇ ดาวน์โหลดทั้งหมด (SRT)</button>
+      <button class="sm-btn" onclick="downloadAll('txt')">⬇ ดาวน์โหลดทั้งหมด (TXT)</button>
+      <span class="status-text" id="batchStatus" style="margin-left:auto"></span>
+    </div>
+
+    <div id="subList"></div>
+
+    <!-- Auto-translate (YouTube) -->
+    <div class="auto-trans-toggle" id="autoTransToggle" style="display:none" onclick="toggleAutoTrans()">
+      🌐 <span id="autoTransLabel">แปลภาษาอัตโนมัติ (0 ภาษา)</span> <span class="arrow" id="autoTransArrow">▼</span>
+    </div>
+    <div class="auto-trans-list" id="autoTransList"></div>
+
+    <!-- Episodes -->
+    <div class="episodes-section" id="episodesSection">
+      <div class="ep-title-bar">📺 ตอนอื่นในซีรีส์นี้</div>
+      <div class="ep-list" id="epList"></div>
+    </div>
+  </div>
+
+  <div id="landingSections">
+    <div class="howto-section">
+      <div class="section-title">วิธีใช้งาน</div>
+      <div class="howto-grid">
+        <div class="howto-card"><div class="howto-num">1</div><h4>วางลิงก์วิดีโอ</h4><p>คัดลอก URL จาก YouTube, WeTV, Viu หรือเว็บที่รองรับ แล้ววางลงในช่องค้นหา</p></div>
+        <div class="howto-card"><div class="howto-num">2</div><h4>คลิกดาวน์โหลด</h4><p>ระบบจะค้นหา subtitle ทั้งหมดที่มีอยู่ในวิดีโอนั้น</p></div>
+        <div class="howto-card"><div class="howto-num">3</div><h4>เลือกรูปแบบ</h4><p>ดาวน์โหลด SRT, TXT หรือ VTT หรือกด ✏️ เพื่อดู/แก้ไข</p></div>
+        <div class="howto-card"><div class="howto-num">4</div><h4>แปลภาษา</h4><p>แปล subtitle อัตโนมัติเป็นภาษาที่ต้องการ (ใช้ editsub.com API)</p></div>
+      </div>
+    </div>
+    <div class="sites-section">
+      <div class="section-title">เว็บที่รองรับ</div>
+      <div class="sites-grid" id="sitesGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE: Editor ═══════════════ -->
+<div class="page" id="page-editor">
+  <div class="section-title">✏️ แก้ไข Subtitle</div>
+  <p style="color:var(--muted);font-size:.85rem;margin-bottom:16px">อัปโหลดไฟล์ subtitle เพื่อแก้ไขข้อความ ปรับเวลา หรือบันทึกเป็นรูปแบบอื่น</p>
+  <div class="upload-zone" id="editorUpload" onclick="document.getElementById('editorFile').click()">
+    <div class="uz-icon">📄</div>
+    <p>ลากไฟล์มาวาง หรือ คลิกเพื่อเลือกไฟล์</p>
+    <div class="uz-formats">รองรับ: SRT, VTT, TXT, SBV, ASS, SSA</div>
+    <input type="file" id="editorFile" accept=".srt,.vtt,.txt,.sbv,.ass,.ssa" style="display:none" onchange="loadEditorFile(this)"/>
+  </div>
+  <div class="editor-area" id="editorArea">
+    <div class="editor-top"><span class="filename" id="editorFilename">—</span><span class="file-info" id="editorInfo"></span></div>
+    <textarea class="edit-ta" id="editorTextarea" spellcheck="false"></textarea>
+    <div class="editor-actions">
+      <button class="btn-act btn-copy" onclick="copyEditor()">📋 คัดลอก</button>
+      <button class="btn-act btn-blue" onclick="saveEditorAs('srt')">💾 .srt</button>
+      <button class="btn-act btn-blue" onclick="saveEditorAs('vtt')">💾 .vtt</button>
+      <button class="btn-act btn-blue" onclick="saveEditorAs('txt')">💾 .txt</button>
+      <button class="btn-act btn-purple" onclick="saveEditorAs('sbv')">💾 .sbv</button>
+      <button class="btn-act btn-purple" onclick="saveEditorAs('ass')">💾 .ass</button>
+      <button class="btn-act sm-btn" onclick="clearEditor()">🗑️ ล้าง</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE: Converter ═══════════════ -->
+<div class="page" id="page-converter">
+  <div class="section-title">🔄 แปลงไฟล์ Subtitle</div>
+  <p style="color:var(--muted);font-size:.85rem;margin-bottom:16px">แปลงไฟล์ subtitle ระหว่างรูปแบบต่างๆ: SRT ↔ VTT ↔ TXT ↔ SBV ↔ ASS/SSA</p>
+  <div class="upload-zone" id="converterUpload" onclick="document.getElementById('converterFile').click()">
+    <div class="uz-icon">🔄</div>
+    <p>ลากไฟล์มาวาง หรือ คลิกเพื่อเลือกไฟล์</p>
+    <div class="uz-formats">รองรับ: SRT, VTT, TXT, SBV, ASS, SSA</div>
+    <input type="file" id="converterFile" accept=".srt,.vtt,.txt,.sbv,.ass,.ssa" style="display:none" onchange="loadConverterFile(this)"/>
+  </div>
+  <div class="editor-area" id="converterArea">
+    <div class="editor-top"><span class="filename" id="converterFilename">—</span><span class="file-info" id="converterInfo"></span></div>
+    <div class="converter-row">
+      <label>แปลงเป็น:</label>
+      <select class="inp" id="convertTarget">
+        <option value="srt">SRT (.srt)</option><option value="vtt">VTT (.vtt)</option><option value="txt">TXT (.txt)</option><option value="sbv">SBV (.sbv)</option><option value="ass">ASS (.ass)</option>
+      </select>
+      <button class="btn-go" onclick="doConvert()">แปลงไฟล์</button>
+    </div>
+    <div class="editor-top" id="convertResultTop" style="display:none"><span class="filename" style="color:var(--success)">✅ ผลลัพธ์:</span></div>
+    <textarea class="edit-ta" id="converterOutput" readonly spellcheck="false" style="display:none;min-height:240px"></textarea>
+    <div class="editor-actions" id="convertActions" style="display:none">
+      <button class="btn-act btn-copy" onclick="copyConverterOutput()">📋 คัดลอก</button>
+      <button class="btn-act btn-blue" id="convertDlBtn" onclick="downloadConverterOutput()">💾 ดาวน์โหลด</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE: Translator ═══════════════ -->
+<div class="page" id="page-translator">
+  <div class="section-title">🌐 แปลภาษา Subtitle</div>
+  <p style="color:var(--muted);font-size:.85rem;margin-bottom:16px">อัปโหลดไฟล์ subtitle แล้วแปลเป็นภาษาที่ต้องการ (ใช้ editsub.com API)</p>
+  <div class="upload-zone" id="translatorUpload" onclick="document.getElementById('translatorFile').click()">
+    <div class="uz-icon">🌐</div>
+    <p>ลากไฟล์มาวาง หรือ คลิกเพื่อเลือกไฟล์</p>
+    <div class="uz-formats">รองรับ: SRT, VTT, TXT, SBV, ASS, SSA</div>
+    <input type="file" id="translatorFile" accept=".srt,.vtt,.txt,.sbv,.ass,.ssa" style="display:none" onchange="loadTranslatorFile(this)"/>
+  </div>
+  <div class="editor-area" id="translatorArea">
+    <div class="editor-top"><span class="filename" id="translatorFilename">—</span><span class="file-info" id="translatorInfo"></span></div>
+    <div class="converter-row">
+      <label>ภาษาต้นฉบับ:</label>
+      <select class="inp" id="transFromLang"><option value="auto">ตรวจอัตโนมัติ</option></select>
+      <label>แปลเป็น:</label>
+      <select class="inp" id="transToLang"></select>
+      <button class="btn-go" id="transGoBtn" onclick="doTranslatorTranslate()">🌐 แปลภาษา</button>
+      <span class="status-text" id="transStatus"></span>
+    </div>
+    <textarea class="edit-ta" id="translatorOutput" readonly spellcheck="false" style="display:none;min-height:280px"></textarea>
+    <div class="editor-actions" id="transActions" style="display:none">
+      <button class="btn-act btn-copy" onclick="copyTransOutput()">📋 คัดลอก</button>
+      <button class="btn-act btn-blue" onclick="downloadTransOutput('srt')">💾 .srt</button>
+      <button class="btn-act btn-blue" onclick="downloadTransOutput('txt')">💾 .txt</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Footer ══ -->
+<footer class="site-footer">
+  <div class="footer-brand">C2<span>Sub</span></div>
+  <div class="footer-text">
+    ดาวน์โหลด subtitle ฟรี รองรับ YouTube, WeTV, Viu, Netflix และอีกมากมาย<br>
+    รองรับ SRT, VTT, TXT, SBV, ASS/SSA | แปลภาษาผ่าน editsub.com | แก้ไข subtitle ออนไลน์<br>
+    © 2026 C2 Sub
+  </div>
+</footer>
+
+<!-- ══ Preview/Edit Modal ══ -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalTitle">Subtitle</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tabSRT" onclick="switchTab('srt')">SRT</button>
+      <button class="tab-btn" id="tabTXT" onclick="switchTab('txt')">TXT</button>
+      <button class="tab-btn" id="tabVTT" onclick="switchTab('vtt')">VTT (raw)</button>
+    </div>
+    <div class="modal-loading" id="modalLoading"><div class="ring"></div><p style="color:var(--muted);font-size:.85rem">กำลังโหลด…</p></div>
+    <div class="modal-info" id="modalInfo"></div>
+    <div class="modal-translate-row" id="modalTranslateRow" style="display:none">
+      <select class="inp" id="modalTransLang"></select>
+      <button class="btn-act btn-copy" onclick="modalTranslate()" style="font-size:.78rem;padding:5px 12px">🌐 แปล</button>
+      <span class="status-text" id="modalTranslateStatus"></span>
+    </div>
+    <div class="modal-body">
+      <textarea id="subTextarea" readonly spellcheck="false"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-act btn-copy" onclick="copyModalContent()">📋 คัดลอก</button>
+      <button class="btn-act btn-edit-toggle" id="btnEditToggle" onclick="toggleModalEdit()">✏️ แก้ไข</button>
+      <button class="btn-act btn-dl" id="dlSRT" onclick="saveModalFile('srt')">💾 .srt</button>
+      <button class="btn-act btn-dl" id="dlTXT" onclick="saveModalFile('txt')">💾 .txt</button>
+      <button class="btn-act btn-dl" id="dlVTT" onclick="saveModalFile('vtt')">💾 .vtt</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+<script>
+'use strict';
+
+// ════════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════════
+const AES_KEY = "zthxw34cdp6wfyxmpad38v52t3hsz6c5";
+const DOWNSUB_API = "https://get.downsub.com/";
+const EDITSUB_KEY = "editsub.";
+
+// ── Worker URL ─────────────────────────────────────────────────────────
+// หลัง deploy worker.js ไปที่ Cloudflare Workers แล้ว ให้ใส่ URL ที่ได้มา
+// เช่น: "https://c2sub.YOURNAME.workers.dev"
+// ถ้ายังไม่ได้ deploy ให้ปล่อยว่างไว้ (จะใช้ public CORS proxy แทน)
+const WORKER_URL = '';
+
+// ════════════════════════════════════════════
+// Sites (อ้างอิงจาก downsub.com/sites)
+// ════════════════════════════════════════════
+const SITES = [
+  {n:'YouTube',d:'youtube.com'},{n:'Viu',d:'viu.com'},{n:'VLive',d:'vlive.tv'},
+  {n:'Viki',d:'viki.com'},{n:'Dailymotion',d:'dailymotion.com'},{n:'Vimeo',d:'vimeo.com'},
+  {n:'OnDemandKorea',d:'ondemandkorea.com'},{n:'TED',d:'ted.com'},{n:'Naver TV',d:'tv.naver.com'},
+  {n:'Kocowa',d:'kocowa.com'},{n:'Google Drive',d:'drive.google.com'},{n:'Facebook',d:'facebook.com'},
+  {n:'VK',d:'vk.com'},{n:'Bilibili',d:'bilibili.com'},{n:'Viu TV',d:'viu.tv'},
+  {n:'TubiTV',d:'tubitv.com'},{n:'Metopera',d:'metopera.org'},{n:'WeTV',d:'wetv.vip'},
+  {n:'iQIYI',d:'iqiyi.com'},{n:'Line TV',d:'linetv.tw'},{n:'Brightcove',d:'brightcove.com'},
+  {n:'Iflix',d:'iflix.com'},{n:'NRK',d:'nrk.no'},{n:'Zee5',d:'zee5.com'},
+  {n:'Dimsum',d:'dimsum.my'},{n:'AltBalaji',d:'altbalaji.com'},{n:'Voot',d:'voot.com'},
+  {n:'Hotstar',d:'hotstar.com'},{n:'Weverse',d:'weverse.io'},{n:'ErosNow',d:'erosnow.com'},
+  {n:'MGTV',d:'mgtv.com'},{n:'OnDemandChina',d:'ondemandchina.com'},{n:'TikTok',d:'tiktok.com'}
+];
+(function(){
+  const g = document.getElementById('sitesGrid');
+  SITES.forEach(s => {
+    const a = document.createElement('a'); 
+    a.className = 'site-chip';
+    a.href = 'https://' + s.d;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.style.textDecoration = 'none';
+    a.style.color = 'inherit';
+    
+    const i = document.createElement('img');
+    i.src = 'https://www.google.com/s2/favicons?domain=' + s.d + '&sz=32';
+    i.alt = s.n; i.loading = 'lazy';
+    i.onerror = function(){ this.style.display = 'none'; };
+    
+    a.appendChild(i); 
+    a.appendChild(document.createTextNode(s.n));
+    g.appendChild(a);
+  });
+})();
+
+// ════════════════════════════════════════════
+// Languages
+// ════════════════════════════════════════════
+// ภาษาทั้งหมดจาก editsub.com (ยอดนิยมก่อน แล้วเรียงตามตัวอักษร)
+const LANGS = [
+  // ── ยอดนิยม ──
+  ['th','Thai'],['en','English'],['zh-CN','Chinese (Simplified)'],['zh-TW','Chinese (Traditional)'],
+  ['ja','Japanese'],['ko','Korean'],['vi','Vietnamese'],['id','Indonesian'],
+  ['ms','Malay'],['ar','Arabic'],['pt','Portuguese (Brazil)'],['pt-PT','Portuguese (Portugal)'],
+  ['es','Spanish'],['fr','French'],['fr-CA','French (Canada)'],['de','German'],
+  ['ru','Russian'],['hi','Hindi'],['it','Italian'],['nl','Dutch'],
+  ['pl','Polish'],['tr','Turkish'],['sv','Swedish'],['da','Danish'],
+  ['no','Norwegian'],['fi','Finnish'],['el','Greek'],['cs','Czech'],
+  ['ro','Romanian'],['hu','Hungarian'],['uk','Ukrainian'],['bg','Bulgarian'],
+  ['hr','Croatian'],['sk','Slovak'],['tl','Filipino'],['my','Myanmar (Burmese)'],
+  ['km','Khmer'],['lo','Lao'],
+  // ── ขยาย (เรียงตัวอักษร) ──
+  ['aa','Afar'],['ab','Abkhaz'],['ace','Acehnese'],['ach','Acholi'],['af','Afrikaans'],
+  ['ak','Twi'],['alz','Alur'],['am','Amharic'],['as','Assamese'],['av','Avar'],
+  ['awa','Awadhi'],['ay','Aymara'],['az','Azerbaijani'],['ba','Bashkir'],
+  ['bal','Baluchi'],['ban','Balinese'],['bbc','Batak Toba'],['bci','Baoulé'],
+  ['be','Belarusian'],['bem','Bemba'],['ber','Tamazight (Tifinagh)'],['ber-Latn','Tamazight'],
+  ['bew','Betawi'],['bho','Bhojpuri'],['bik','Bikol'],['bm','Bambara'],
+  ['bm-Nkoo','NKo'],['bn','Bengali'],['bo','Tibetan'],['br','Breton'],
+  ['bs','Bosnian'],['btx','Batak Karo'],['bts','Batak Simalungun'],['bua','Buryat'],
+  ['ca','Catalan'],['ce','Chechen'],['ceb','Cebuano'],['cgg','Kiga'],
+  ['ch','Chamorro'],['chk','Chuukese'],['chm','Meadow Mari'],['ckb','Kurdish (Sorani)'],
+  ['cnh','Hakha Chin'],['co','Corsican'],['crh','Crimean Tatar (Cyrillic)'],
+  ['crh-Latn','Crimean Tatar (Latin)'],['crs','Seychellois Creole'],
+  ['cv','Chuvash'],['cy','Welsh'],['din','Dinka'],['doi','Dogri'],
+  ['dov','Dombe'],['dv','Dhivehi'],['dyu','Dyula'],['dz','Dzongkha'],
+  ['ee','Ewe'],['eo','Esperanto'],['et','Estonian'],['eu','Basque'],
+  ['fa','Persian'],['fa-AF','Dari'],['ff','Fulani'],['fj','Fijian'],
+  ['fo','Faroese'],['fon','Fon'],['fur','Friulian'],['fy','Frisian'],
+  ['ga','Irish'],['gaa','Ga'],['gd','Scots Gaelic'],['gl','Galician'],
+  ['gn','Guarani'],['gom','Konkani'],['gu','Gujarati'],['gv','Manx'],
+  ['ha','Hausa'],['haw','Hawaiian'],['hil','Hiligaynon'],['hmn','Hmong'],
+  ['hrx','Hunsrik'],['ht','Haitian Creole'],['hy','Armenian'],
+  ['iba','Iban'],['ig','Igbo'],['ilo','Ilocano'],['is','Icelandic'],
+  ['iu','Inuktut (Syllabics)'],['iu-Latn','Inuktut (Latin)'],['iw','Hebrew'],
+  ['jam','Jamaican Patois'],['jw','Javanese'],['ka','Georgian'],['kac','Jingpo'],
+  ['kek',"Qʼeqchiʼ"],['kg','Kikongo'],['kha','Khasi'],['kk','Kazakh'],
+  ['kl','Kalaallisut'],['kn','Kannada'],['kr','Kanuri'],['kri','Krio'],
+  ['ktu','Kituba'],['ku','Kurdish (Kurmanji)'],['kv','Komi'],['ky','Kyrgyz'],
+  ['la','Latin'],['lb','Luxembourgish'],['lg','Luganda'],['li','Limburgish'],
+  ['lij','Ligurian'],['lmo','Lombard'],['ln','Lingala'],['ltg','Latgalian'],
+  ['lua','Tshiluba'],['luo','Luo'],['lus','Mizo'],['lv','Latvian'],
+  ['mad','Madurese'],['mai','Maithili'],['mak','Makassar'],['mam','Mam'],
+  ['mfe','Mauritian Creole'],['mg','Malagasy'],['mh','Marshallese'],['mi','Maori'],
+  ['min','Minang'],['mk','Macedonian'],['ml','Malayalam'],['mn','Mongolian'],
+  ['mni-Mtei','Meiteilon (Manipuri)'],['mr','Marathi'],['ms-Arab','Malay (Jawi)'],
+  ['mt','Maltese'],['mwr','Marwadi'],['ndc-ZW','Ndau'],['ne','Nepali'],
+  ['new','Nepalbhasa (Newari)'],['nhe','Nahuatl (Eastern Huasteca)'],
+  ['nr','Ndebele (South)'],['nso','Sepedi'],['nus','Nuer'],['ny','Chichewa'],
+  ['oc','Occitan'],['om','Oromo'],['or','Odia (Oriya)'],['os','Ossetian'],
+  ['pa','Punjabi (Gurmukhi)'],['pa-Arab','Punjabi (Shahmukhi)'],
+  ['pag','Pangasinan'],['pam','Kapampangan'],['pap','Papiamento'],
+  ['ps','Pashto'],['qu','Quechua'],['rn','Rundi'],['rom','Romani'],
+  ['rw','Kinyarwanda'],['sa','Sanskrit'],['sah','Yakut'],
+  ['sat','Santali (Ol Chiki)'],['sat-Latn','Santali (Latin)'],
+  ['scn','Sicilian'],['sd','Sindhi'],['se','Sami (North)'],['sg','Sango'],
+  ['shn','Shan'],['si','Sinhala'],['sl','Slovenian'],['sm','Samoan'],
+  ['sn','Shona'],['so','Somali'],['sq','Albanian'],['sr','Serbian'],
+  ['ss','Swati'],['st','Sesotho'],['su','Sundanese'],['sus','Susu'],
+  ['sw','Swahili'],['szl','Silesian'],['ta','Tamil'],['tcy','Tulu'],
+  ['te','Telugu'],['tet','Tetum'],['tg','Tajik'],['ti','Tigrinya'],
+  ['tiv','Tiv'],['tk','Turkmen'],['tn','Tswana'],['to','Tongan'],
+  ['tpi','Tok Pisin'],['trp','Kokborok'],['ts','Tsonga'],['tt','Tatar'],
+  ['tum','Tumbuka'],['ty','Tahitian'],['tyv','Tuvan'],['udm','Udmurt'],
+  ['ug','Uyghur'],['ur','Urdu'],['uz','Uzbek'],['ve','Venda'],
+  ['vec','Venetian'],['war','Waray'],['wo','Wolof'],['xh','Xhosa'],
+  ['yi','Yiddish'],['yo','Yoruba'],['yua','Yucatec Maya'],['yue','Cantonese'],
+  ['zap','Zapotec'],['zu','Zulu'],
+];
+function populateLangSelect(sel, addAuto){
+  if(addAuto) sel.appendChild(new Option('ตรวจอัตโนมัติ','auto'));
+  LANGS.forEach(([c,n]) => sel.appendChild(new Option(n,c)));
+}
+(function(){
+  populateLangSelect(document.getElementById('translateFrom'), true);
+  populateLangSelect(document.getElementById('translateTo'), false);
+  populateLangSelect(document.getElementById('modalTransLang'), false);
+  populateLangSelect(document.getElementById('transFromLang'), true);
+  populateLangSelect(document.getElementById('transToLang'), false);
+  document.getElementById('translateTo').value = 'th';
+  document.getElementById('modalTransLang').value = 'th';
+  document.getElementById('transToLang').value = 'th';
+})();
+
+// ════════════════════════════════════════════
+// Page navigation
+// ════════════════════════════════════════════
+function switchPage(name){
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.page === name));
+  const page = document.getElementById('page-' + name);
+  if(page) page.classList.add('active');
+  const sw = document.querySelector('.search-wrap');
+  const sa = document.querySelector('.search-actions');
+  if(name === 'download'){ sw.style.display = ''; sa.style.display = ''; }
+  else { sw.style.display = 'none'; sa.style.display = 'none'; }
+}
+
+// ════════════════════════════════════════════
+// Crypto (downsub.com AES-CBC + EVP_BytesToKey)
+// ════════════════════════════════════════════
+function _evp(pw, sh){
+  const p = CryptoJS.enc.Utf8.parse(pw), s = CryptoJS.enc.Hex.parse(sh);
+  let d = CryptoJS.lib.WordArray.create([]), di = CryptoJS.lib.WordArray.create([]);
+  while(d.sigBytes < 48){ di = CryptoJS.MD5(di.clone().concat(p).concat(s)); d = d.concat(di); }
+  const h = d.toString(CryptoJS.enc.Hex);
+  return { key: CryptoJS.enc.Hex.parse(h.slice(0,64)), iv: CryptoJS.enc.Hex.parse(h.slice(64,96)) };
+}
+function _s2b(s){ const b = new TextEncoder().encode(s); let r = ''; for(const x of b) r += String.fromCharCode(x); return btoa(r); }
+function _b64u(s){ return _s2b(s).replace('+','-').replace('/','_').replace(/=/g,''); }
+function _b64d(e){ let b = e.replace('-','+').replace('_','/'); while(b.length % 4) b += '='; const d = atob(b), u = new Uint8Array(d.length); for(let i = 0; i < d.length; i++) u[i] = d.charCodeAt(i); return new TextDecoder().decode(u); }
+function _enc(v, pw){
+  const s = CryptoJS.lib.WordArray.random(8), sh = s.toString(CryptoJS.enc.Hex);
+  const { key, iv } = _evp(pw, sh);
+  const e = CryptoJS.AES.encrypt(CryptoJS.enc.Utf8.parse(JSON.stringify(v)), key, { iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 });
+  return _b64u(JSON.stringify({ ct: e.ciphertext.toString(CryptoJS.enc.Base64), iv: iv.toString(CryptoJS.enc.Hex), s: sh }));
+}
+function _dec(e, pw){
+  const o = JSON.parse(_b64d(e));
+  const { key, iv } = _evp(pw, o.s);
+  const d = CryptoJS.AES.decrypt({ ciphertext: CryptoJS.enc.Base64.parse(o.ct) }, key, { iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 });
+  const p = d.toString(CryptoJS.enc.Utf8);
+  try { return JSON.parse(p); } catch(x) { return p; }
+}
+function _cleanUrl(r){
+  r = r.trim();
+  try { r = decodeURIComponent(r); } catch(e){}
+  const m = r.match(/^(https?:\/\/[^\/]+\/(?:[a-z]{2}\/)?play\/[A-Za-z0-9]+\/[A-Za-z0-9]+)/i);
+  return m ? m[1] : r;
+}
+
+// ════════════════════════════════════════════
+// Ehe encoding — clone ตรงจาก editsub.com
+// ════════════════════════════════════════════
+function _ehe(t){
+  if(!t) return "";
+  const e = s => new TextEncoder().encode(s);
+  const n = i => ('0' + Number(i).toString(16)).substr(-2);
+  const r = i => e(EDITSUB_KEY).reduce((s, o) => s ^ o, i);
+  return Array.from(e(t)).map(r).map(n).join('');
+}
+
+// ════════════════════════════════════════════
+// Network
+// ════════════════════════════════════════════
+const _subCache = new Map();
+function _sig(ms){ const c = new AbortController(); setTimeout(() => c.abort(), ms); return c.signal; }
+
+function _getProxies(u){
+  const ps = [
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
+    'https://corsproxy.io/?' + encodeURIComponent(u),
+    'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u),
+  ];
+  if(WORKER_URL) ps.unshift(WORKER_URL + '/api/fetch?url=' + encodeURIComponent(u));
+  return ps;
+}
+
+async function corsFetch(url, ms = 12000){
+  if(_subCache.has(url)) return _subCache.get(url);
+  const races = _getProxies(url).map(proxyUrl => new Promise(async (res, rej) => {
+    try {
+      const r = await fetch(proxyUrl, { signal: _sig(ms) });
+      if(!r.ok) return rej(r.status);
+      const t = await r.text();
+      (t && t.length > 20) ? res(t) : rej('empty');
+    } catch(e){ rej(e); }
+  }));
+  const text = await Promise.any(races).catch(() => { throw new Error('ดาวน์โหลดไฟล์ subtitle ไม่ได้'); });
+  _subCache.set(url, text);
+  return text;
+}
+
+function _ps(m){ const e = document.getElementById('proxyStatus'); e.style.display = 'block'; e.textContent = m; }
+function _hp(){ document.getElementById('proxyStatus').style.display = 'none'; }
+
+async function callAPI(url, data){
+  const body = JSON.stringify({ url, data });
+  const hdrs = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+  _ps('กำลังเชื่อมต่อ…');
+
+  // 1. Cloudflare Worker (ถ้าตั้งค่าไว้)
+  if(WORKER_URL){
+    try {
+      const r = await fetch(WORKER_URL + '/api/proxy', { method: 'POST', headers: hdrs, body, signal: _sig(20000) });
+      if(r.ok){
+        const j = await r.json();
+        if(j && j.state !== undefined){ _hp(); return j; }
+      }
+    } catch(e){}
+  }
+
+  // 2. Public CORS proxy
+  _ps('กำลังลอง CORS proxy…');
+  const POST_URLS = [
+    'https://corsproxy.io/?' + encodeURIComponent(DOWNSUB_API),
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent(DOWNSUB_API),
+    DOWNSUB_API,
+  ];
+  const races = POST_URLS.map(u => new Promise(async (res, rej) => {
+    try {
+      const r = await fetch(u, { method: 'POST', headers: hdrs, body, signal: _sig(15000) });
+      if(!r.ok) return rej(r.status);
+      const t = await r.text(); if(!t || t.length < 5) return rej('empty');
+      let j; try { j = JSON.parse(t); } catch(e){ return rej('parse'); }
+      if(j && j.contents !== undefined) try { j = JSON.parse(j.contents); } catch(e){ return rej('parse2'); }
+      (j && j.state !== undefined) ? res(j) : rej('no state');
+    } catch(e){ rej(e); }
+  }));
+  const result = await Promise.any(races).catch(() => {
+    throw new Error('เชื่อมต่อ API ไม่ได้\n\n💡 ต้องตั้งค่า Cloudflare Worker ก่อน\n   1. เปิด worker.js → deploy ไป Cloudflare Workers (ฟรี)\n   2. ใส่ URL ที่ได้ในตัวแปร WORKER_URL ใน index.html');
+  });
+  _hp();
+  return result;
+}
+
+async function fetchSubs(rawUrl){
+  const url = _cleanUrl(rawUrl);
+  const ue = _enc(url, AES_KEY);
+  const d = _enc(ue, url);
+  const res = await callAPI(url, d);
+  if(res.state === 1 || res.state === 2){
+    for(const s of (res.subtitles || [])){
+      if(s.url) try { s.url = _dec(s.url, AES_KEY); } catch(e){}
+      if(s.zipUrl) try { s.zipUrl = _dec(s.zipUrl, AES_KEY); } catch(e){}
+    }
+    // Decrypt auto-translated subtitle URLs
+    for(const s of (res.subtitlesAutoTrans || [])){
+      if(s.url) try { s.url = _dec(s.url, AES_KEY); } catch(e){}
+    }
+  }
+  return res;
+}
+
+// ════════════════════════════════════════════
+// Editsub.com Translate API  (fallback chain: worker → CORS proxies → direct)
+// ════════════════════════════════════════════
+async function editsubTranslate(texts, toLang){
+  const encoded = texts.map(t => _ehe(t));
+  const payload = JSON.stringify({ texts: encoded, to: toLang });
+  const hdrs = { 'Content-Type': 'application/json' };
+  const EDITSUB_URL = 'https://editsub.com/api/translate';
+
+  // สร้าง list ของ endpoints ที่จะลอง (race)
+  const endpoints = [];
+  // 1. Cloudflare Worker (เร็วที่สุดถ้าตั้งค่าไว้)
+  if(WORKER_URL) endpoints.push(WORKER_URL + '/api/editsub');
+  // 2. Public CORS proxies
+  endpoints.push('https://corsproxy.io/?' + encodeURIComponent(EDITSUB_URL));
+  endpoints.push('https://api.allorigins.win/raw?url=' + encodeURIComponent(EDITSUB_URL));
+  // 3. Direct (อาจ CORS block แต่ลองก่อน)
+  endpoints.push(EDITSUB_URL);
+
+  // Race ทุก endpoint พร้อมกัน — ใครสำเร็จก่อนชนะ
+  const races = endpoints.map(ep => new Promise(async (res, rej) => {
+    try {
+      const r = await fetch(ep, { method:'POST', headers:hdrs, body:payload, signal:_sig(35000) });
+      if(!r.ok) return rej('http ' + r.status);
+      let j;
+      const txt = await r.text();
+      try { j = JSON.parse(txt); } catch(_){
+        // allorigins อาจ wrap ใน {contents: "..."}
+        try { j = JSON.parse(JSON.parse(txt).contents); } catch(__){ return rej('parse'); }
+      }
+      if(j && j.translatedText?.length > 0) return res(j.translatedText);
+      rej('empty');
+    } catch(e){ rej(e); }
+  }));
+
+  return Promise.any(races).catch(() => { throw new Error('แปลภาษาไม่ได้ — ลอง deploy worker.js หรือตั้ง WORKER_URL'); });
+}
+
+// Batch translate with chunking (max ~4500 chars per batch, like editsub.com)
+async function editsubTranslateBatch(allTexts, toLang, onProgress){
+  const batches = []; let cur = [], curLen = 0;
+  for(const t of allTexts){
+    if(curLen + t.length > 4500 && cur.length > 0){
+      batches.push(cur); cur = []; curLen = 0;
+    }
+    cur.push(t); curLen += t.length;
+  }
+  if(cur.length > 0) batches.push(cur);
+
+  const results = [];
+  for(let i = 0; i < batches.length; i++){
+    if(onProgress) onProgress(`กำลังแปล ${i+1}/${batches.length}…`);
+    const translated = await editsubTranslate(batches[i], toLang);
+    results.push(...translated);
+  }
+  return results;
+}
+
+// ════════════════════════════════════════════
+// Subtitle parsers
+// ════════════════════════════════════════════
+
+// --- Parse VTT
+function parseVTT(v){
+  const L = v.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+  let i = 0;
+  while(i < L.length){ const l = L[i].trim(); if(l.startsWith('WEBVTT')||l.startsWith('Kind:')||l.startsWith('Language:')||l==='') i++; else break; }
+  if(i < L.length && L[i].trim()==='STYLE'){ i++; while(i < L.length && L[i].trim()!=='') i++; while(i < L.length && L[i].trim()==='') i++; }
+  while(i < L.length && L[i].trim().startsWith('NOTE')){ i++; while(i < L.length && L[i].trim()!=='') i++; while(i < L.length && L[i].trim()==='') i++; }
+  const cues = [];
+  while(i < L.length){
+    if(L[i].trim()===''){ i++; continue; }
+    if(i+1 < L.length && L[i+1].includes('-->')) i++;
+    if(i < L.length && L[i].includes('-->')){
+      const m = L[i].trim().match(/([\d:.]+)\s*-->\s*([\d:.]+)/);
+      if(m){
+        const start = m[1], end = m[2]; i++;
+        const tl = [];
+        while(i < L.length && L[i].trim()!==''){ tl.push(L[i].trim().replace(/<[^>]+>/g,'')); i++; }
+        if(tl.length) cues.push({ start, end, text: tl.join('\n') });
+      } else i++;
+    } else i++;
+  }
+  return cues;
+}
+
+// --- Parse SRT
+function parseSRT(s){
+  const blocks = s.replace(/\r\n/g,'\n').replace(/\r/g,'\n').trim().split(/\n\n+/);
+  const cues = [];
+  for(const b of blocks){
+    const lines = b.split('\n');
+    let tLine = -1;
+    for(let j = 0; j < lines.length; j++){
+      if(lines[j].includes('-->')){tLine = j; break;}
+    }
+    if(tLine < 0) continue;
+    const m = lines[tLine].match(/([\d:,.]+)\s*-->\s*([\d:,.]+)/);
+    if(!m) continue;
+    const text = lines.slice(tLine+1).join('\n').trim();
+    if(text) cues.push({ start: m[1].replace(/,/g,'.'), end: m[2].replace(/,/g,'.'), text });
+  }
+  return cues;
+}
+
+// --- Parse SBV
+function parseSBV(s){
+  const blocks = s.replace(/\r\n/g,'\n').replace(/\r/g,'\n').trim().split(/\n\n+/);
+  const cues = [];
+  for(const b of blocks){
+    const lines = b.split('\n');
+    const m = (lines[0]||'').match(/([\d:.]+),([\d:.]+)/);
+    if(!m) continue;
+    const text = lines.slice(1).join('\n').trim();
+    if(text) cues.push({ start: m[1], end: m[2], text });
+  }
+  return cues;
+}
+
+// --- Parse ASS/SSA
+function parseASS(s){
+  const cues = [];
+  const lines = s.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+  for(const line of lines){
+    const m = line.match(/^Dialogue:\s*\d+,([\d:.]+),([\d:.]+),([^,]*),([^,]*),(\d+),(\d+),(\d+),([^,]*),(.*)/);
+    if(m){
+      const text = m[9].replace(/\\N/g,'\n').replace(/\{[^}]*\}/g,'').trim();
+      if(text) cues.push({ start: m[1], end: m[2], text });
+    }
+  }
+  return cues;
+}
+
+// --- Parse YouTube XML timedtext
+function msToTime(ms){
+  ms = Math.max(0, ms);
+  const h = Math.floor(ms/3600000);
+  const m = Math.floor((ms%3600000)/60000);
+  const s = Math.floor((ms%60000)/1000);
+  const f = ms%1000;
+  return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+'.'+String(f).padStart(3,'0');
+}
+
+function parseTimedtext(xml){
+  const cues = [];
+  try {
+    const doc = new DOMParser().parseFromString(xml, 'text/xml');
+    const ps = doc.querySelectorAll('p');
+    for(const p of ps){
+      const t = parseInt(p.getAttribute('t')||'0', 10);
+      const d = parseInt(p.getAttribute('d')||'0', 10);
+      let text = '';
+      if(p.querySelectorAll('s').length > 0){
+        const parts = [];
+        for(const child of p.childNodes){
+          if(child.nodeType === 3) parts.push(child.textContent);
+          else if(child.nodeName === 's') parts.push(child.textContent);
+        }
+        text = parts.join('').trim();
+      } else {
+        text = p.textContent.trim();
+      }
+      if(!text) continue;
+      text = text.replace(/\n/g, ' ').trim();
+      cues.push({ start: msToTime(t), end: msToTime(t + d), text });
+    }
+  } catch(e){ console.warn('parseTimedtext error:', e); }
+  return cues;
+}
+
+// --- Auto-detect format
+function autoDetect(content){
+  const t = content.trimStart();
+  if(t.startsWith('<?xml') || t.startsWith('<timedtext')) return 'timedtext';
+  if(t.startsWith('WEBVTT')) return 'vtt';
+  if(t.startsWith('[Script Info]') || t.includes('ScriptType:') || t.match(/^Dialogue:\s*\d+,/m)) return 'ass';
+  if(/^\d{1,2}:\d{2}:\d{2}\.\d{3},\d{1,2}:\d{2}:\d{2}\.\d{3}/.test(t)) return 'sbv';
+  if(/^\d+\n\d{2}:\d{2}:\d{2}[,.]\d{3}\s*-->/.test(t)) return 'srt';
+  return 'txt';
+}
+
+function parseCues(content){
+  const fmt = autoDetect(content);
+  if(fmt === 'timedtext') return parseTimedtext(content);
+  if(fmt === 'vtt') return parseVTT(content);
+  if(fmt === 'srt') return parseSRT(content);
+  if(fmt === 'sbv') return parseSBV(content);
+  if(fmt === 'ass') return parseASS(content);
+  return content.trim().split('\n').filter(l=>l.trim()).map((l,i)=>({ start:'00:00:00.000', end:'00:00:00.000', text:l.trim() }));
+}
+
+// ════════════════════════════════════════════
+// Format converters
+// ════════════════════════════════════════════
+function normTime(t){
+  t = t.replace(/,/g,'.');
+  const parts = t.split(':');
+  if(parts.length === 2) t = '00:' + t;
+  if(!t.includes('.')) t += '.000';
+  return t;
+}
+function srtTime(t){ return normTime(t).replace('.',','); }
+
+function cuesToSrt(cues){
+  return cues.map((c,i) => (i+1)+'\n'+srtTime(c.start)+' --> '+srtTime(c.end)+'\n'+c.text).join('\n\n')+'\n';
+}
+function cuesToVtt(cues){
+  let out = 'WEBVTT\n\n';
+  out += cues.map((c,i) => (i+1)+'\n'+normTime(c.start)+' --> '+normTime(c.end)+'\n'+c.text).join('\n\n');
+  return out + '\n';
+}
+function cuesToTxt(cues){
+  const seen = new Set();
+  return cues.map(c=>c.text).filter(t=>{ if(seen.has(t)) return false; seen.add(t); return true; }).join('\n')+'\n';
+}
+function cuesToSbv(cues){
+  return cues.map(c => normTime(c.start)+','+normTime(c.end)+'\n'+c.text).join('\n\n')+'\n';
+}
+function cuesToAss(cues){
+  let out = `[Script Info]
+Title: C2 Sub Export
+ScriptType: v4.00+
+Collisions: Normal
+PlayDepth: 0
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,Arial,20,&H00FFFFFF,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,2,10,10,10,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+`;
+  for(const c of cues){
+    const t = c.text.replace(/\n/g,'\\N');
+    out += `Dialogue: 0,${normTime(c.start)},${normTime(c.end)},Default,,0,0,0,,${t}\n`;
+  }
+  return out;
+}
+
+// ════════════════════════════════════════════
+// State
+// ════════════════════════════════════════════
+let _vttRaw = '', _srtText = '', _txtText = '', _curTab = 'srt', _subName = 'subtitle', _vidTitle = '', _editing = false;
+let _lastResult = null;
+function _sf(s){ return s.replace(/[\\\/:*?"<>|]/g,'_').replace(/\s+/g,' ').trim().slice(0,80); }
+
+// ════════════════════════════════════════════
+// UI helpers
+// ════════════════════════════════════════════
+function showErr(m){ const e = document.getElementById('errorCard'); e.innerHTML = m.replace(/\n/g,'<br>'); e.style.display = 'block'; }
+function hideErr(){ document.getElementById('errorCard').style.display = 'none'; }
+function showSpinner(m){ document.getElementById('spinnerMsg').textContent = m||'กำลังค้นหา…'; document.getElementById('spinner').style.display = 'block'; document.getElementById('resultCard').style.display = 'none'; }
+function hideSpinner(){ document.getElementById('spinner').style.display = 'none'; }
+function togglePanel(name){
+  const p = document.getElementById(name+'Panel');
+  const a = document.getElementById(name+'Arrow');
+  p.classList.toggle('open'); a.classList.toggle('open');
+}
+function toggleAutoTrans(){
+  const l = document.getElementById('autoTransList');
+  const a = document.getElementById('autoTransArrow');
+  l.classList.toggle('open'); a.classList.toggle('open');
+}
+(function(){ const f = localStorage.getItem('c2sub_fmt'); if(f) document.getElementById('defaultFmt').value = f; })();
+
+// ════════════════════════════════════════════
+// Render results
+// ════════════════════════════════════════════
+function renderResults(data){
+  _lastResult = data;
+  const subs = data.subtitles || [];
+  const autoTrans = data.subtitlesAutoTrans || [];
+  const title = data.title || data.videoTitle || data.videoId || '—';
+  const thumb = data.thumbnail || data.image || '';
+
+  const img = document.getElementById('vidThumb'), ph = document.getElementById('vidThumbPh');
+  if(thumb){ img.src = thumb; img.style.display = ''; ph.style.display = 'none'; }
+  else { img.style.display = 'none'; ph.style.display = 'flex'; }
+  _vidTitle = title;
+  document.getElementById('vidTitle').textContent = title;
+  document.getElementById('vidMeta').textContent = 'พบ ' + subs.length + ' subtitle' + (data.duration ? ' · ระยะเวลา: ' + data.duration : '') + (data.source ? ' · ' + data.source : '');
+
+  // Main subtitle list
+  const list = document.getElementById('subList'); list.innerHTML = '';
+  if(!subs.length){
+    list.innerHTML = '<p style="padding:20px;color:var(--muted);text-align:center">ไม่พบ subtitle</p>';
+  } else {
+    subs.forEach(function(sub, idx){
+      const row = document.createElement('div'); row.className = 'sub-row';
+      row.appendChild(mkBtn('SRT','btn-srt', btn => dlSub(sub,btn,'srt')));
+      row.appendChild(mkBtn('TXT','btn-txt', btn => dlSub(sub,btn,'txt')));
+      row.appendChild(mkBtn('RAW','btn-raw', btn => dlSub(sub,btn,'vtt')));
+      row.appendChild(mkBtn('✏️','btn-edit', btn => openEditsub(sub,btn)));
+      const lang = document.createElement('span'); lang.className = 'sub-lang';
+      lang.textContent = sub.languageName || sub.name || sub.languageCode || ('Subtitle '+(idx+1));
+      const code = document.createElement('span'); code.className = 'lang-code';
+      code.textContent = '(' + (sub.languageCode || sub.code || '—') + ')';
+      lang.appendChild(code);
+      row.appendChild(lang);
+      list.appendChild(row);
+    });
+  }
+
+  // Auto-translated subtitles (from YouTube)
+  const atToggle = document.getElementById('autoTransToggle');
+  const atList = document.getElementById('autoTransList');
+  atList.innerHTML = '';
+  if(autoTrans.length > 0){
+    atToggle.style.display = 'flex';
+    document.getElementById('autoTransLabel').textContent = 'แปลภาษาอัตโนมัติ (' + autoTrans.length + ' ภาษา)';
+    autoTrans.forEach(function(sub, idx){
+      const row = document.createElement('div'); row.className = 'sub-row';
+      row.appendChild(mkBtn('SRT','btn-srt', btn => dlSub(sub,btn,'srt')));
+      row.appendChild(mkBtn('TXT','btn-txt', btn => dlSub(sub,btn,'txt')));
+      row.appendChild(mkBtn('RAW','btn-raw', btn => dlSub(sub,btn,'vtt')));
+      row.appendChild(mkBtn('✏️','btn-edit', btn => openEditsub(sub,btn)));
+      const lang = document.createElement('span'); lang.className = 'sub-lang';
+      lang.textContent = sub.name || sub.languageName || ('Auto '+(idx+1));
+      const code = document.createElement('span'); code.className = 'lang-code';
+      code.textContent = '(auto)';
+      lang.appendChild(code);
+      row.appendChild(lang);
+      atList.appendChild(row);
+    });
+  } else {
+    atToggle.style.display = 'none';
+  }
+
+  // Episodes
+  const epSec = document.getElementById('episodesSection'), epListEl = document.getElementById('epList');
+  epListEl.innerHTML = '';
+  const playlist = data.playlist || data.episodes || data.related || [];
+  if(playlist.length > 0){
+    playlist.forEach(function(ep){
+      const card = document.createElement('div'); card.className = 'ep-card';
+      card.onclick = function(){ document.getElementById('urlInput').value = ep.url||ep.link||''; doSearch(); };
+      if(ep.thumbnail || ep.image){
+        const im = document.createElement('img'); im.className = 'ep-thumb'; im.src = ep.thumbnail||ep.image;
+        im.onerror = function(){ this.outerHTML = '<div class="ep-thumb-ph">📺</div>'; };
+        card.appendChild(im);
+      } else {
+        const ph2 = document.createElement('div'); ph2.className = 'ep-thumb-ph'; ph2.textContent = '📺';
+        card.appendChild(ph2);
+      }
+      const nm = document.createElement('div'); nm.className = 'ep-name';
+      nm.textContent = ep.title || ep.name || ep.url || 'ตอนถัดไป';
+      card.appendChild(nm);
+      epListEl.appendChild(card);
+    });
+    epSec.style.display = 'block';
+  } else {
+    epSec.style.display = 'none';
+  }
+
+  document.getElementById('resultCard').style.display = 'block';
+  document.getElementById('landingSections').style.display = 'none';
+}
+
+function mkBtn(label, cls, handler){
+  const btn = document.createElement('button'); btn.className = 'btn-fmt ' + cls;
+  if(label === '✏️'){ btn.innerHTML = '✏️'; btn.title = 'เปิด C2 Sub Editor'; }
+  else btn.innerHTML = '⬇ ' + label;
+  btn.onclick = function(){ handler(btn); };
+  return btn;
+}
+
+// ════════════════════════════════════════════
+// Open C2 Sub Editor (editor.html) for editing
+//   1. Download subtitle via our proxy
+//   2. Parse to cues array
+//   3. Save to localStorage (cross-tab, no server required)
+//   4. Open editor.html?id=<uuid> in new tab
+// ════════════════════════════════════════════
+async function openEditsub(sub, btn){
+  const url = sub.url || sub.zipUrl || '';
+  if(!url){ alert('ไม่พบ URL ของ subtitle'); return; }
+
+  const origHtml = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = '⏳';
+
+  try {
+    let subCues;
+    if(sub._translatedCues){
+      subCues = sub._translatedCues;
+    } else if(sub._translatedSrt){
+      subCues = parseSRT(sub._translatedSrt);
+    } else {
+      const raw = await corsFetch(url);
+      subCues = parseCues(raw);
+    }
+
+    if(!subCues || subCues.length === 0){
+      alert('ไม่พบ subtitle ในไฟล์นี้'); return;
+    }
+
+    // Save to localStorage (cross-tab, works without server) and open editor
+    const id = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36);
+    const subTitle = (_vidTitle || sub.languageName || sub.name || 'Subtitle').slice(0, 80);
+    localStorage.setItem('c2sub_edit_' + id, JSON.stringify({ title: subTitle, cues: subCues }));
+    // Auto-cleanup after 10 min in case editor tab is never opened
+    setTimeout(() => localStorage.removeItem('c2sub_edit_' + id), 600000);
+    window.open('editor.html?id=' + id, '_blank');
+
+  } catch(e){
+    alert('เปิด Editor ไม่ได้: ' + (e.message || e));
+  }
+
+  btn.disabled = false; btn.innerHTML = origHtml;
+}
+
+// ════════════════════════════════════════════
+// Download subtitle
+// ════════════════════════════════════════════
+async function dlSub(sub, btn, fmt){
+  // Translated subs (locally generated)
+  if(sub._translatedSrt){
+    const lang = sub.languageCode || 'sub';
+    const base = _vidTitle ? _sf(_vidTitle) + ' - ' + lang : lang;
+    let content, ext;
+    if(fmt==='srt'){ content = sub._translatedSrt; ext = '.srt'; }
+    else if(fmt==='txt'){ content = sub._translatedTxt||''; ext = '.txt'; }
+    else { content = sub._translatedSrt; ext = '.srt'; }
+    blobDl(content, base+ext, 'text/plain'); return;
+  }
+
+  const url = sub.url || sub.zipUrl || ''; if(!url) return;
+  const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spin-sm"></span>';
+  try {
+    const raw = await corsFetch(url);
+    const detected = autoDetect(raw);
+    const hasCues = detected !== 'txt';
+    let content, mime, ext;
+    if(fmt === 'srt'){
+      content = hasCues ? cuesToSrt(parseCues(raw)) : raw;
+      mime = 'text/plain'; ext = '.srt';
+    } else if(fmt === 'txt'){
+      content = hasCues ? cuesToTxt(parseCues(raw)) : raw;
+      mime = 'text/plain'; ext = '.txt';
+    } else {
+      if(detected === 'timedtext') content = cuesToVtt(parseCues(raw));
+      else content = raw;
+      mime = 'text/vtt'; ext = '.vtt';
+    }
+    const langName = sub.languageCode || sub.code || sub.name || 'sub';
+    const base = _vidTitle ? _sf(_vidTitle)+' - '+langName : langName;
+    blobDl(content, base+ext, mime);
+  } catch(e){ alert('ดาวน์โหลดไม่ได้: '+(e.message||e)); }
+  finally { btn.disabled = false; btn.innerHTML = orig; }
+}
+
+function blobDl(c, f, m){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([c], { type: m+';charset=utf-8' }));
+  a.download = f; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+
+// ════════════════════════════════════════════
+// Download ALL subtitles
+// ════════════════════════════════════════════
+async function downloadAll(fmt){
+  if(!_lastResult || !(_lastResult.subtitles||[]).length) return;
+  const subs = _lastResult.subtitles;
+  const st = document.getElementById('batchStatus');
+  st.textContent = 'กำลังดาวน์โหลด 0/' + subs.length + '…';
+
+  for(let i = 0; i < subs.length; i++){
+    st.textContent = 'กำลังดาวน์โหลด ' + (i+1) + '/' + subs.length + '…';
+    const sub = subs[i];
+    if(sub._translatedSrt){
+      const lang = sub.languageCode || 'sub';
+      const base = _vidTitle ? _sf(_vidTitle)+' - '+lang : lang;
+      if(fmt==='srt') blobDl(sub._translatedSrt, base+'.srt', 'text/plain');
+      else blobDl(sub._translatedTxt||sub._translatedSrt, base+'.txt', 'text/plain');
+      await new Promise(r => setTimeout(r, 300)); continue;
+    }
+    const url = sub.url || sub.zipUrl || ''; if(!url) continue;
+    try {
+      const raw = await corsFetch(url);
+      const detected = autoDetect(raw);
+      const hasCues = detected !== 'txt';
+      let content, ext;
+      if(fmt==='srt'){ content = hasCues ? cuesToSrt(parseCues(raw)) : raw; ext = '.srt'; }
+      else { content = hasCues ? cuesToTxt(parseCues(raw)) : raw; ext = '.txt'; }
+      const base = _vidTitle ? _sf(_vidTitle)+' - '+(sub.languageCode||sub.code||'sub') : (sub.languageCode||sub.code||'sub');
+      blobDl(content, base+ext, 'text/plain');
+    } catch(e){}
+    await new Promise(r => setTimeout(r, 300));
+  }
+  st.textContent = '✅ ดาวน์โหลดทั้งหมดเสร็จแล้ว!';
+  setTimeout(() => { st.textContent = ''; }, 4000);
+}
+
+// ════════════════════════════════════════════
+// Preview / Editor Modal
+// ════════════════════════════════════════════
+async function openPreview(sub, btn){
+  if(sub._translatedSrt){
+    _vttRaw = ''; _srtText = sub._translatedSrt; _txtText = sub._translatedTxt||''; _editing = false;
+    const lang = sub.languageCode || 'sub';
+    _subName = _vidTitle ? _sf(_vidTitle)+' - '+lang : lang;
+    document.getElementById('modalTitle').textContent = sub.languageName || sub.name || 'Translated';
+    document.getElementById('subTextarea').setAttribute('readonly','');
+    document.getElementById('btnEditToggle').classList.remove('editing');
+    document.getElementById('btnEditToggle').textContent = '✏️ แก้ไข';
+    document.getElementById('modalLoading').style.display = 'none';
+    document.getElementById('subTextarea').style.display = '';
+    document.getElementById('modalTranslateRow').style.display = 'flex';
+    document.getElementById('modalInfo').textContent = 'แปลอัตโนมัติ';
+    document.getElementById('dlSRT').style.display = _srtText ? '' : 'none';
+    document.getElementById('dlTXT').style.display = _txtText ? '' : 'none';
+    document.getElementById('dlVTT').style.display = 'none';
+    document.getElementById('modalOverlay').classList.add('active');
+    document.body.style.overflow = 'hidden';
+    switchTab('srt'); return;
+  }
+
+  const url = sub.url || sub.zipUrl || ''; if(!url) return;
+  _vttRaw = ''; _srtText = ''; _txtText = ''; _editing = false;
+  const lang = sub.languageCode || sub.code || sub.name || 'sub';
+  _subName = _vidTitle ? _sf(_vidTitle)+' - '+lang : lang;
+
+  document.getElementById('modalTitle').textContent = sub.languageName || sub.name || sub.languageCode || 'Subtitle';
+  document.getElementById('subTextarea').value = '';
+  document.getElementById('subTextarea').setAttribute('readonly','');
+  document.getElementById('btnEditToggle').classList.remove('editing');
+  document.getElementById('btnEditToggle').textContent = '✏️ แก้ไข';
+  document.getElementById('modalInfo').textContent = '';
+  document.getElementById('modalLoading').style.display = 'block';
+  document.getElementById('subTextarea').style.display = 'none';
+  document.getElementById('modalTranslateRow').style.display = 'none';
+  ['dlSRT','dlTXT','dlVTT'].forEach(id => document.getElementById(id).style.display = 'none');
+  document.getElementById('modalOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+
+  const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spin-sm"></span>';
+  try {
+    const raw = await corsFetch(url);
+    const detected = autoDetect(raw);
+    const cues = (detected !== 'txt') ? parseCues(raw) : null;
+    if(cues && cues.length > 0){
+      _vttRaw = cuesToVtt(cues); _srtText = cuesToSrt(cues); _txtText = cuesToTxt(cues);
+    } else {
+      _srtText = raw;
+    }
+
+    const kb = (new TextEncoder().encode(raw).length / 1024).toFixed(1);
+    document.getElementById('modalInfo').textContent = 'ขนาด: ' + kb + ' KB · ' + (detected === 'timedtext' ? 'YouTube XML' : detected.toUpperCase());
+    document.getElementById('modalLoading').style.display = 'none';
+    document.getElementById('subTextarea').style.display = '';
+    document.getElementById('modalTranslateRow').style.display = 'flex';
+    if(_srtText) document.getElementById('dlSRT').style.display = '';
+    if(_txtText) document.getElementById('dlTXT').style.display = '';
+    if(_vttRaw) document.getElementById('dlVTT').style.display = '';
+    switchTab(document.getElementById('defaultFmt').value || 'srt');
+  } catch(e){
+    document.getElementById('modalLoading').style.display = 'none';
+    document.getElementById('subTextarea').style.display = '';
+    document.getElementById('subTextarea').value = '❌ โหลดไม่ได้: '+(e.message||e);
+  } finally { btn.disabled = false; btn.innerHTML = orig; }
+}
+
+function switchTab(tab){
+  _curTab = tab;
+  ['tabSRT','tabTXT','tabVTT'].forEach(id => document.getElementById(id).classList.remove('active'));
+  const m = {srt:'tabSRT',txt:'tabTXT',vtt:'tabVTT'}; if(m[tab]) document.getElementById(m[tab]).classList.add('active');
+  const ta = document.getElementById('subTextarea');
+  ta.value = tab==='srt' ? (_srtText||'(ไม่มีข้อมูล)') : tab==='txt' ? (_txtText||'(ไม่มีข้อมูล)') : (_vttRaw||'(ไม่มีข้อมูล)');
+}
+
+function toggleModalEdit(){
+  const ta = document.getElementById('subTextarea'), btn = document.getElementById('btnEditToggle');
+  _editing = !_editing;
+  if(_editing){ ta.removeAttribute('readonly'); btn.classList.add('editing'); btn.textContent = '💾 บันทึก'; }
+  else {
+    ta.setAttribute('readonly',''); btn.classList.remove('editing'); btn.textContent = '✏️ แก้ไข';
+    if(_curTab==='srt') _srtText = ta.value;
+    else if(_curTab==='txt') _txtText = ta.value;
+    else _vttRaw = ta.value;
+  }
+}
+
+function copyModalContent(){
+  const ta = document.getElementById('subTextarea');
+  const btn = document.querySelector('.modal-actions .btn-copy');
+  (navigator.clipboard ? navigator.clipboard.writeText(ta.value) : Promise.reject())
+    .then(() => flash(btn,'✅ คัดลอกแล้ว!'))
+    .catch(() => { ta.select(); document.execCommand('copy'); flash(btn,'✅ คัดลอกแล้ว!'); });
+}
+function flash(b,l){ const o = b.textContent; b.textContent = l; b.classList.add('copied'); setTimeout(()=>{ b.textContent = o; b.classList.remove('copied'); }, 2000); }
+
+function saveModalFile(fmt){
+  let c, m, e;
+  if(fmt==='srt'){ c = _srtText; m = 'text/plain'; e = '.srt'; }
+  if(fmt==='txt'){ c = _txtText; m = 'text/plain'; e = '.txt'; }
+  if(fmt==='vtt'){ c = _vttRaw; m = 'text/vtt'; e = '.vtt'; }
+  if(c) blobDl(c, _subName+e, m);
+}
+
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('active'); document.body.style.overflow = ''; }
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
+
+// ════════════════════════════════════════════
+// Modal translate (using editsub.com API)
+// ════════════════════════════════════════════
+async function modalTranslate(){
+  const to = document.getElementById('modalTransLang').value;
+  const st = document.getElementById('modalTranslateStatus');
+  const ta = document.getElementById('subTextarea');
+  if(!_srtText && !ta.value.trim()) return;
+  st.textContent = 'กำลังแปล…'; st.style.display = 'inline';
+  try {
+    // Parse cues from current SRT
+    const source = _srtText || ta.value;
+    const cues = parseCues(source);
+    if(cues.length === 0) throw new Error('ไม่พบข้อมูล subtitle');
+
+    const texts = cues.map(c => c.text);
+    const translated = await editsubTranslateBatch(texts, to, m => { st.textContent = m; });
+
+    // Apply translations to cues
+    for(let i = 0; i < cues.length && i < translated.length; i++){
+      cues[i].text = translated[i] || cues[i].text;
+    }
+    _srtText = cuesToSrt(cues);
+    _txtText = cuesToTxt(cues);
+    _vttRaw = cuesToVtt(cues);
+    switchTab(_curTab);
+
+    st.textContent = '✅ แปลสำเร็จ!';
+    setTimeout(() => { st.style.display = 'none'; }, 3000);
+  } catch(e){ st.textContent = '❌ '+e.message; setTimeout(() => { st.style.display = 'none'; }, 4000); }
+}
+
+// ════════════════════════════════════════════
+// Top-level translate (editsub.com API)
+// ════════════════════════════════════════════
+async function translateSubtitle(){
+  const from = document.getElementById('translateFrom').value;
+  const to = document.getElementById('translateTo').value;
+  const btn = document.getElementById('translateBtn');
+  const st = document.getElementById('translateStatus');
+  if(!_lastResult || !(_lastResult.subtitles||[]).length){ st.textContent = 'ไม่มี subtitle'; st.style.display = 'inline'; return; }
+  btn.disabled = true; st.textContent = 'กำลังแปล subtitle…'; st.style.display = 'inline';
+  try {
+    const sub = _lastResult.subtitles[0];
+    let cues;
+    if(sub._translatedSrt){
+      cues = parseCues(sub._translatedSrt);
+    } else {
+      const url = sub.url || sub.zipUrl || '';
+      const raw = await corsFetch(url);
+      cues = parseCues(raw);
+    }
+    if(!cues || cues.length === 0) throw new Error('ไม่พบข้อมูล subtitle');
+
+    const texts = cues.map(c => c.text);
+    st.textContent = 'กำลังแปล (editsub.com)…';
+    const translated = await editsubTranslateBatch(texts, to, m => { st.textContent = m; });
+
+    // Build translated cues
+    const transCues = cues.map((c, i) => ({ ...c, text: translated[i] || c.text }));
+    const translatedSrt = cuesToSrt(transCues);
+    const translatedTxt = cuesToTxt(transCues);
+
+    const langName = LANGS.find(l => l[0]===to);
+    _lastResult.subtitles.push({
+      languageName: '🌐 '+(langName?langName[1]:to)+' (แปลอัตโนมัติ)',
+      languageCode: to,
+      _translatedSrt: translatedSrt,
+      _translatedTxt: translatedTxt,
+      url: sub.url || sub.zipUrl
+    });
+    renderResults(_lastResult);
+    st.textContent = '✅ แปลสำเร็จ! เพิ่มในรายการแล้ว';
+    setTimeout(() => { st.style.display = 'none'; }, 4000);
+  } catch(e){
+    st.textContent = '❌ '+e.message; setTimeout(() => { st.style.display = 'none'; }, 4000);
+  } finally { btn.disabled = false; }
+}
+
+// ════════════════════════════════════════════
+// Main search
+// ════════════════════════════════════════════
+async function doSearch(){
+  const raw = document.getElementById('urlInput').value.trim(); if(!raw) return;
+  hideErr(); showSpinner(); _hp(); _subCache.clear();
+  document.getElementById('searchBtn').disabled = true;
+  try {
+    const res = await fetchSubs(raw);
+    hideSpinner();
+    if(res.state === 0) showErr('ไม่พบ subtitle (state 0) — ตรวจสอบลิงก์แล้วลองใหม่');
+    else if(res.state === 3) showErr('เกิดข้อผิดพลาดจาก API (state 3)');
+    else renderResults(res);
+  } catch(e){ hideSpinner(); showErr(e.message || String(e)); }
+  finally { document.getElementById('searchBtn').disabled = false; }
+}
+
+function doClear(){
+  document.getElementById('urlInput').value = '';
+  document.getElementById('resultCard').style.display = 'none';
+  document.getElementById('landingSections').style.display = '';
+  hideErr(); _hp(); _subCache.clear(); _lastResult = null;
+  document.getElementById('urlInput').focus();
+}
+
+document.getElementById('urlInput').addEventListener('keydown', e => { if(e.key === 'Enter') doSearch(); });
+
+// ════════════════════════════════════════════
+// EDITOR PAGE
+// ════════════════════════════════════════════
+let _editorFilename = '';
+
+function setupDragDrop(zone, input){
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('drag');
+    if(e.dataTransfer.files.length){
+      const dt = new DataTransfer(); dt.items.add(e.dataTransfer.files[0]);
+      input.files = dt.files; input.dispatchEvent(new Event('change'));
+    }
+  });
+}
+setupDragDrop(document.getElementById('editorUpload'), document.getElementById('editorFile'));
+setupDragDrop(document.getElementById('converterUpload'), document.getElementById('converterFile'));
+setupDragDrop(document.getElementById('translatorUpload'), document.getElementById('translatorFile'));
+
+function loadEditorFile(inp){
+  const f = inp.files[0]; if(!f) return;
+  _editorFilename = f.name;
+  const reader = new FileReader();
+  reader.onload = function(){
+    document.getElementById('editorFilename').textContent = f.name;
+    document.getElementById('editorInfo').textContent = (f.size/1024).toFixed(1)+' KB · '+autoDetect(reader.result).toUpperCase();
+    document.getElementById('editorTextarea').value = reader.result;
+    document.getElementById('editorArea').style.display = 'block';
+  };
+  reader.readAsText(f);
+}
+
+function saveEditorAs(fmt){
+  const content = document.getElementById('editorTextarea').value;
+  if(!content.trim()) return;
+  const cues = parseCues(content);
+  let output, ext;
+  if(fmt==='srt'){ output = cuesToSrt(cues); ext = '.srt'; }
+  else if(fmt==='vtt'){ output = cuesToVtt(cues); ext = '.vtt'; }
+  else if(fmt==='txt'){ output = cuesToTxt(cues); ext = '.txt'; }
+  else if(fmt==='sbv'){ output = cuesToSbv(cues); ext = '.sbv'; }
+  else if(fmt==='ass'){ output = cuesToAss(cues); ext = '.ass'; }
+  else return;
+  const base = _editorFilename ? _editorFilename.replace(/\.[^.]+$/,'') : 'subtitle';
+  blobDl(output, base+ext, 'text/plain');
+}
+
+function copyEditor(){
+  const ta = document.getElementById('editorTextarea');
+  navigator.clipboard ? navigator.clipboard.writeText(ta.value) : (ta.select(), document.execCommand('copy'));
+}
+
+function clearEditor(){
+  document.getElementById('editorTextarea').value = '';
+  document.getElementById('editorArea').style.display = 'none';
+  document.getElementById('editorFile').value = '';
+  _editorFilename = '';
+}
+
+// ════════════════════════════════════════════
+// CONVERTER PAGE
+// ════════════════════════════════════════════
+let _converterFilename = '', _converterContent = '', _convertedOutput = '', _convertedExt = '';
+
+function loadConverterFile(inp){
+  const f = inp.files[0]; if(!f) return;
+  _converterFilename = f.name;
+  const reader = new FileReader();
+  reader.onload = function(){
+    _converterContent = reader.result;
+    document.getElementById('converterFilename').textContent = f.name;
+    document.getElementById('converterInfo').textContent = (f.size/1024).toFixed(1)+' KB · ตรวจพบ: '+autoDetect(reader.result).toUpperCase();
+    document.getElementById('converterArea').style.display = 'block';
+    document.getElementById('convertResultTop').style.display = 'none';
+    document.getElementById('converterOutput').style.display = 'none';
+    document.getElementById('convertActions').style.display = 'none';
+  };
+  reader.readAsText(f);
+}
+
+function doConvert(){
+  if(!_converterContent.trim()) return;
+  const target = document.getElementById('convertTarget').value;
+  const cues = parseCues(_converterContent);
+  if(target==='srt'){ _convertedOutput = cuesToSrt(cues); _convertedExt = '.srt'; }
+  else if(target==='vtt'){ _convertedOutput = cuesToVtt(cues); _convertedExt = '.vtt'; }
+  else if(target==='txt'){ _convertedOutput = cuesToTxt(cues); _convertedExt = '.txt'; }
+  else if(target==='sbv'){ _convertedOutput = cuesToSbv(cues); _convertedExt = '.sbv'; }
+  else if(target==='ass'){ _convertedOutput = cuesToAss(cues); _convertedExt = '.ass'; }
+  document.getElementById('converterOutput').value = _convertedOutput;
+  document.getElementById('convertResultTop').style.display = 'flex';
+  document.getElementById('converterOutput').style.display = 'block';
+  document.getElementById('convertActions').style.display = 'flex';
+  document.getElementById('convertDlBtn').textContent = '💾 ดาวน์โหลด ' + _convertedExt;
+}
+
+function copyConverterOutput(){
+  const ta = document.getElementById('converterOutput');
+  navigator.clipboard ? navigator.clipboard.writeText(ta.value) : (ta.select(), document.execCommand('copy'));
+}
+
+function downloadConverterOutput(){
+  if(!_convertedOutput) return;
+  const base = _converterFilename ? _converterFilename.replace(/\.[^.]+$/,'') : 'subtitle';
+  blobDl(_convertedOutput, base+_convertedExt, 'text/plain');
+}
+
+// ════════════════════════════════════════════
+// TRANSLATOR PAGE (editsub.com API)
+// ════════════════════════════════════════════
+let _translatorContent = '', _translatorFilename = '', _translatedResult = '';
+
+function loadTranslatorFile(inp){
+  const f = inp.files[0]; if(!f) return;
+  _translatorFilename = f.name;
+  const reader = new FileReader();
+  reader.onload = function(){
+    _translatorContent = reader.result;
+    document.getElementById('translatorFilename').textContent = f.name;
+    document.getElementById('translatorInfo').textContent = (f.size/1024).toFixed(1)+' KB · '+autoDetect(reader.result).toUpperCase();
+    document.getElementById('translatorArea').style.display = 'block';
+    document.getElementById('translatorOutput').style.display = 'none';
+    document.getElementById('transActions').style.display = 'none';
+  };
+  reader.readAsText(f);
+}
+
+async function doTranslatorTranslate(){
+  if(!_translatorContent.trim()) return;
+  const to = document.getElementById('transToLang').value;
+  const btn = document.getElementById('transGoBtn');
+  const st = document.getElementById('transStatus');
+  btn.disabled = true; st.textContent = 'กำลังแปล…';
+
+  try {
+    const cues = parseCues(_translatorContent);
+    if(!cues || cues.length === 0) throw new Error('ไม่พบข้อมูล subtitle');
+
+    const texts = cues.map(c => c.text);
+    const translated = await editsubTranslateBatch(texts, to, m => { st.textContent = m; });
+
+    const transCues = cues.map((c, i) => ({ ...c, text: translated[i] || c.text }));
+    _translatedResult = cuesToSrt(transCues);
+
+    document.getElementById('translatorOutput').value = _translatedResult;
+    document.getElementById('translatorOutput').style.display = 'block';
+    document.getElementById('transActions').style.display = 'flex';
+    st.textContent = '✅ แปลสำเร็จ!';
+    setTimeout(() => { st.textContent = ''; }, 3000);
+  } catch(e){
+    st.textContent = '❌ '+e.message;
+    setTimeout(() => { st.textContent = ''; }, 4000);
+  } finally { btn.disabled = false; }
+}
+
+function copyTransOutput(){
+  const ta = document.getElementById('translatorOutput');
+  navigator.clipboard ? navigator.clipboard.writeText(ta.value) : (ta.select(), document.execCommand('copy'));
+}
+
+function downloadTransOutput(fmt){
+  if(!_translatedResult) return;
+  const base = _translatorFilename ? _translatorFilename.replace(/\.[^.]+$/,'') + '_translated' : 'translated';
+  blobDl(_translatedResult, base+'.'+fmt, 'text/plain');
+}
+
+</script>
+</body>
+</html>
