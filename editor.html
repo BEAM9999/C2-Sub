@@ -103,7 +103,7 @@ td.td-trans{}
   padding:8px 8px;border:none;background:transparent;
   color:var(--text);font-size:.85rem;outline:none;
   line-height:1.5;overflow:hidden;
-  transition:background .12s
+  transition:background .12s;
 }
 .text-in:focus{background:rgba(0,0,0,.18)}
 .trans-in{color:var(--text2);font-style:italic;font-size:.82rem}
@@ -168,6 +168,29 @@ td.td-act{text-align:center;padding:6px 4px;vertical-align:middle;white-space:no
 .trans-prog.show{display:block}
 .trans-prog-bar{height:4px;background:var(--surface3);border-radius:2px;margin-top:8px;overflow:hidden}
 .trans-prog-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s;width:0%}
+
+/* ── Responsive ── */
+@media(max-width:768px){
+  #header{height:auto;flex-wrap:wrap;padding:8px 10px}
+  #titleInput{max-width:100%;flex:1 1 100%;margin-top:4px}
+  .hdr-sep{display:none}
+  #toolbar{flex-wrap:wrap;padding:8px 10px;gap:8px}
+  .tb-btn{flex:1 1 auto;text-align:center;justify-content:center}
+  table#subTable{display:block;width:100%}
+  thead{display:none}
+  tbody, tr{display:block;width:100%}
+  tr{position:relative;padding:12px 10px;border-bottom:2px solid var(--border);background:var(--surface)}
+  tr:hover{background:var(--surface)}
+  td{display:block;width:100%;border:none!important;padding:0!important}
+  td.td-num{position:absolute;top:12px;left:10px;width:auto;padding:0!important;font-size:.8rem;font-weight:700;color:var(--accent)}
+  td.td-time{display:inline-block;width:auto;margin-left:30px;margin-bottom:8px}
+  .time-in{width:90px;padding:4px;font-size:.85rem;background:var(--surface2);border-radius:4px;text-align:center}
+  td.td-time:nth-child(2)::after{content:" - ";color:var(--muted);margin:0 4px}
+  td.td-text, td.td-trans{margin-bottom:8px}
+  .text-in{background:var(--surface2);border-radius:6px;padding:10px;font-size:.9rem}
+  td.td-act{text-align:right;margin-top:4px}
+  .act-btn{width:32px;height:32px;font-size:1.1rem;margin-left:8px}
+}
 </style>
 </head>
 <body>
@@ -892,10 +915,10 @@ function autoDetect(c){
   const h = c.trimStart().slice(0, 200);
   if(h.includes('<timedtext') || h.includes('<text ')) return 'timedtext';
   if(h.startsWith('WEBVTT')) return 'vtt';
-  if(/^\d+\r?\n\d+:\d+:\d+[,\.]/.test(h.trim())) return 'srt';
+  if(/^\d+\r?\n\d+:\d+:\d+[,.]/.test(h.trim())) return 'srt';
   if(h.includes('[Script Info]') || /^Dialogue:/m.test(c)) return 'ass';
   if(/^\d+:\d+:\d+\.\d+,\d+:\d+:\d+\.\d+/.test(h.trim())) return 'sbv';
-  if(/\d+:\d+:\d+[,\.]\d+\s+-->\s+\d+/.test(c)) return 'srt';
+  if(/\d+:\d+:\d+[,.]\d+\s+-->\s+\d+/.test(c)) return 'srt';
   return 'txt';
 }
 
